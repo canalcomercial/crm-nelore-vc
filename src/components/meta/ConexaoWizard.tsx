@@ -8,9 +8,8 @@ import { Copy, Check, ChevronRight, ChevronLeft, Loader2, CheckCircle2, XCircle 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMetaConfig, useSalvarMetaConfig } from "@/hooks/useMeta";
+import { META_WEBHOOK_URL as WEBHOOK_URL } from "@/lib/public-urls";
 
-const PROJECT_REF = "jyhxcqlsinxodfcdrlgx";
-const WEBHOOK_URL = `https://${PROJECT_REF}.supabase.co/functions/v1/meta-lead-webhook`;
 
 type Step = 1 | 2 | 3 | 4;
 

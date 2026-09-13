@@ -6,9 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useMetaConfig, useSalvarMetaConfig } from "@/hooks/useMeta";
+import { META_WEBHOOK_URL as WEBHOOK_URL } from "@/lib/public-urls";
 
-const PROJECT_REF = "jyhxcqlsinxodfcdrlgx";
-const WEBHOOK_URL = `https://${PROJECT_REF}.supabase.co/functions/v1/meta-lead-webhook`;
 
 export function ConexaoTab() {
   const { data: config } = useMetaConfig();
