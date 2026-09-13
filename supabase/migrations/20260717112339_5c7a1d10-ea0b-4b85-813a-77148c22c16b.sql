@@ -1,0 +1,1 @@
+ALTER TABLE public.animais ADD COLUMN IF NOT EXISTS comissao_percentual numeric;

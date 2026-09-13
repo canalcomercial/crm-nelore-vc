@@ -1,1 +1,147 @@
-# crm-nelore-vc
+# CRM Nelore VC
+
+CRM de gestão de leads, vendas, contratos e catálogo para o criatório Nelore VC
+(Jv Assessoria Pecuária). Aplicação React + Vite servida como SPA, com Supabase
+(Postgres, Auth, Storage, Edge Functions) como backend.
+
+## Stack
+
+| Camada | Tecnologia |
+| --- | --- |
+| UI | React 18, TypeScript, Vite 5, Tailwind CSS, shadcn/ui (Radix) |
+| Estado/dados | TanStack Query, Supabase JS v2 |
+| Backend | Supabase — Postgres 17, Auth, Storage, Edge Functions (Deno) |
+| Migrations | SQL em `supabase/migrations/` (Supabase CLI) e `drizzle/migrations/` |
+| Testes | Vitest + Testing Library |
+
+## Configuração
+
+### 1. Variáveis de ambiente
+
+```bash
+cp .env.example .env
+```
+
+Preencha com os dados do seu projeto Supabase (Project Settings → Data API e API Keys):
+
+| Variável | Para quê |
+| --- | --- |
+| `VITE_SUPABASE_URL` | Endpoint da API do projeto |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave publicável (anon) usada no browser |
+| `VITE_SUPABASE_PROJECT_ID` | Ref do projeto |
+| `VITE_PUBLIC_SITE_URL` | Domínio público usado em links de contrato, formulários e página comercial. Vazio = origem atual do navegador |
+
+O app falha na inicialização com mensagem explícita se `VITE_SUPABASE_URL` ou
+`VITE_SUPABASE_PUBLISHABLE_KEY` estiverem ausentes.
+
+### 2. Rodar localmente
+
+```bash
+npm install
+npm run dev          # http://localhost:8080
+```
+
+Outros comandos:
+
+```bash
+npm run build        # build de produção em dist/
+npm run preview      # serve o build
+npm run lint         # ESLint
+npm test             # Vitest
+```
+
+## Banco de dados
+
+O schema vive em `supabase/migrations/`, aplicado em ordem cronológica pelo nome
+do arquivo. Com a [Supabase CLI](https://supabase.com/docs/guides/cli):
+
+```bash
+supabase link --project-ref <seu-project-ref>
+supabase db push
+```
+
+São 27 tabelas em `public`, todas com Row Level Security ativo. O controle de
+acesso gira em torno de dois papéis (enum `app_role`):
+
+- **coordenador** — acesso total: equipe, funis, catálogo, contratos, integração Meta, página comercial.
+- **vendedor** — enxerga apenas os próprios leads (`responsavel_id`) e vendas (`vendedor_id`).
+
+As policies usam `private.has_role()` e `private.has_lead_access()`, funções
+`SECURITY DEFINER` no schema `private`, que não é exposto via PostgREST.
+
+### Primeiro acesso
+
+As migrations de seed criam a conta de coordenador. A senha vem da configuração
+`app.seed_admin_password`; se não for definida, uma senha aleatória é gerada e o
+acesso precisa ser feito pelo fluxo de "esqueci minha senha". Para definir uma
+senha conhecida ao aplicar as migrations num banco novo:
+
+```sql
+SET app.seed_admin_password = 'sua-senha-forte';
+```
+
+Nenhuma senha é versionada neste repositório.
+
+### Buckets de Storage
+
+| Bucket | Público | Conteúdo |
+| --- | --- | --- |
+| `lead-documentos` | não | Documentos anexados aos leads |
+| `animais-fotos` | sim | Fotos do catálogo de animais |
+| `pagina-comercial-midia` | sim | Imagens e vídeos da página comercial |
+| `contratos-pdf` | não | PDFs dos contratos gerados |
+
+## Edge Functions
+
+Em `supabase/functions/`. Deploy com `supabase functions deploy <nome>`.
+
+| Função | JWT | O que faz |
+| --- | --- | --- |
+| `criar-membro` | sim | Cria usuário da equipe (coordenador) |
+| `excluir-membro` | sim | Remove usuário da equipe (coordenador) |
+| `contrato-publico` | não | Lê contrato pelo token público |
+| `assinar-contrato` | não | Registra assinatura eletrônica (nome, CPF, IP, hash) |
+| `submeter-formulario` | sim | Recebe formulário público e cria lead |
+| `pagina-comercial-lead` | sim | Recebe lead da página comercial |
+| `receber-proposta` | sim | Recebe proposta do catálogo e cria lead |
+| `extrair-frame-video` | não | Extrai frames de vídeo do YouTube para o catálogo |
+| `meta-lead-webhook` | não | Webhook do Meta Lead Ads |
+| `meta-listar-forms` | sim | Lista formulários de Lead Ads das páginas conectadas |
+| `meta-testar-conexao` | sim | Valida o token da Meta e lista páginas |
+| `meta-reprocessar-evento` | sim | Reprocessa um evento do log da Meta |
+
+`_shared/meta-processar.ts` é o módulo comum do pipeline de leads da Meta.
+
+### Secrets das Edge Functions
+
+`SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` são injetadas
+automaticamente pelo Supabase. As da Meta precisam ser cadastradas em
+Supabase → Edge Functions → Secrets:
+
+| Secret | Necessária para |
+| --- | --- |
+| `META_PAGE_ACCESS_TOKEN` | Buscar leads e formulários na Graph API |
+| `META_VERIFY_TOKEN` | Handshake de verificação do webhook do Meta |
+
+Sem elas, a integração com Meta Ads fica inativa — o resto do CRM funciona normalmente.
+
+## Estrutura
+
+```
+src/
+  pages/              Rotas (Funis, Vendas, Contratos, Catálogo, Admin…)
+  components/         Componentes por domínio + ui/ (shadcn)
+  hooks/              Hooks de dados sobre TanStack Query
+  integrations/       Client e tipos gerados do Supabase
+  lib/                Utilitários (URLs públicas, formatação)
+supabase/
+  migrations/         Schema versionado
+  functions/          Edge Functions (Deno)
+drizzle/              Migrations complementares de hardening de RLS
+```
+
+Os tipos em `src/integrations/supabase/types.ts` são gerados do banco:
+
+```bash
+supabase gen types typescript --project-id <seu-project-ref> > src/integrations/supabase/types.ts
+```
