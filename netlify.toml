@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA: rotas como /catalogo/:id e /contrato/:token são resolvidas no cliente,
+# então todo caminho precisa cair no index.html em vez de 404.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

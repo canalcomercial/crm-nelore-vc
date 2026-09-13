@@ -50,6 +50,27 @@ npm run lint         # ESLint
 npm test             # Vitest
 ```
 
+## Deploy
+
+O projeto é uma SPA: `npm run build` gera estáticos em `dist/`, que rodam em
+qualquer host de site estático. Já vão no repositório as configs de SPA
+fallback (`vercel.json`, `netlify.toml`, `public/_redirects`) — sem elas, abrir
+`/catalogo/:id` ou `/contrato/:token` direto na URL devolve 404, porque quem
+resolve essas rotas é o React Router, no cliente.
+
+**As variáveis `VITE_*` precisam ser cadastradas no painel do host.** O `.env`
+é ignorado pelo git de propósito, então o build no servidor não o enxerga; sem
+as variáveis, o app aborta na inicialização com erro explícito.
+
+| Host | Como publicar |
+| --- | --- |
+| Vercel | `npx vercel --prod` (ou conectar o repositório no painel) |
+| Netlify | `npx netlify deploy --prod` |
+| Cloudflare Pages | Build `npm run build`, diretório de saída `dist` |
+
+Depois de publicar, aponte `VITE_PUBLIC_SITE_URL` para o domínio final — é ele
+que monta os links de contrato, formulário público e página comercial.
+
 ## Banco de dados
 
 O schema vive em `supabase/migrations/`, aplicado em ordem cronológica pelo nome
