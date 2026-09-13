@@ -104,13 +104,23 @@ Em `supabase/functions/`. Deploy com `supabase functions deploy <nome>`.
 | `submeter-formulario` | sim | Recebe formulário público e cria lead |
 | `pagina-comercial-lead` | sim | Recebe lead da página comercial |
 | `receber-proposta` | sim | Recebe proposta do catálogo e cria lead |
-| `extrair-frame-video` | não | Extrai frames de vídeo do YouTube para o catálogo |
-| `meta-lead-webhook` | não | Webhook do Meta Lead Ads |
+| `extrair-frame-video` | sim | Extrai frames de vídeo do YouTube para o catálogo |
+| `meta-lead-webhook` | não* | Webhook do Meta Lead Ads |
 | `meta-listar-forms` | sim | Lista formulários de Lead Ads das páginas conectadas |
 | `meta-testar-conexao` | sim | Valida o token da Meta e lista páginas |
 | `meta-reprocessar-evento` | sim | Reprocessa um evento do log da Meta |
 
 `_shared/meta-processar.ts` é o módulo comum do pipeline de leads da Meta.
+
+\* `meta-lead-webhook` não exige JWT porque a Meta não emite um. No lugar disso,
+a função valida o header `X-Hub-Signature-256` (HMAC-SHA256 do corpo bruto com o
+App Secret) em comparação de tempo constante. **A verificação falha fechada**:
+sem `META_APP_SECRET` configurado, nenhuma entrega é aceita — sem isso qualquer
+pessoa que descobrisse a URL poderia injetar leads falsos no CRM.
+
+As outras funções públicas (`contrato-publico`, `assinar-contrato`) são
+protegidas pelo `token_publico` do contrato — um UUID v4, inviável de adivinhar —
+e as demais exigem JWT válido, checando papel de coordenador quando aplicável.
 
 ### Secrets das Edge Functions
 
@@ -122,8 +132,13 @@ Supabase → Edge Functions → Secrets:
 | --- | --- |
 | `META_PAGE_ACCESS_TOKEN` | Buscar leads e formulários na Graph API |
 | `META_VERIFY_TOKEN` | Handshake de verificação do webhook do Meta |
+| `META_APP_SECRET` | **Validar a assinatura das entregas do webhook** |
 
-Sem elas, a integração com Meta Ads fica inativa — o resto do CRM funciona normalmente.
+`META_APP_SECRET` é o App Secret do app na Meta (Configurações → Básico). Sem
+ela o webhook recusa toda entrega com 503, por segurança.
+
+Sem essas secrets a integração com Meta Ads fica inativa — o resto do CRM
+funciona normalmente.
 
 ## Estrutura
 
