@@ -62,11 +62,35 @@ resolve essas rotas é o React Router, no cliente.
 é ignorado pelo git de propósito, então o build no servidor não o enxerga; sem
 as variáveis, o app aborta na inicialização com erro explícito.
 
+### Cloudflare Workers (configurado neste repositório)
+
+O `wrangler.jsonc` já está pronto: serve `dist/` como Workers Static Assets com
+`not_found_handling: single-page-application`.
+
+```bash
+npx wrangler login     # abre o navegador, uma única vez
+npm run deploy         # build + deploy; imprime a URL ao final
+```
+
+A URL sai como `https://crm-nelore-vc.<sua-conta>.workers.dev`. Para domínio
+próprio: Workers → o worker → Settings → Domains & Routes.
+
+Em CI (sem navegador), use um API token no lugar do `login`:
+
+```bash
+CLOUDFLARE_API_TOKEN=... npx wrangler deploy
+```
+
+### Outros hosts
+
 | Host | Como publicar |
 | --- | --- |
-| Vercel | `npx vercel --prod` (ou conectar o repositório no painel) |
+| Vercel | `npx vercel --prod` |
 | Netlify | `npx netlify deploy --prod` |
-| Cloudflare Pages | Build `npm run build`, diretório de saída `dist` |
+
+**Atenção com as variáveis:** as `VITE_*` são embutidas no bundle **no momento
+do build**. Rodando `npm run deploy` da sua máquina, o `.env` local é usado; se
+o build rodar no servidor (Workers Builds, CI), cadastre-as lá.
 
 Depois de publicar, aponte `VITE_PUBLIC_SITE_URL` para o domínio final — é ele
 que monta os links de contrato, formulário público e página comercial.
