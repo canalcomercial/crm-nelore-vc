@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
 export type Animal = {
@@ -371,7 +372,7 @@ export function useAtualizarAnimaisEvento() {
       qc.invalidateQueries({ queryKey: ["animais-por-evento", v.eventoId] });
       toast.success("Animais do evento atualizados");
     },
-    onError: (e: any) => toast.error(e.message ?? "Erro ao atualizar animais do evento"),
+    onError: (e: Error) => toast.error(e.message || "Erro ao atualizar animais do evento"),
   });
 }
 
@@ -395,22 +396,30 @@ const COLUNAS_ANIMAL = [
   "genetica","link_erural","link_pre_lance","ficha",
 ] as const;
 
-function payloadAnimal(a: Record<string, any>) {
-  const out: Record<string, any> = {};
-  for (const k of COLUNAS_ANIMAL) if (k in a) out[k] = a[k] === "" ? null : a[k];
-  return out;
+/**
+ * Recorta apenas as colunas que existem na tabela `animais`, convertendo string
+ * vazia em NULL. O cast final é necessário porque `avaliacoes`, `genetica` e
+ * `ficha` são tipados no app como objetos e no banco como `Json`.
+ */
+function payloadAnimal(a: Partial<Animal>): TablesInsert<"animais"> {
+  const origem = a as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const k of COLUNAS_ANIMAL) {
+    if (k in origem) out[k] = origem[k] === "" ? null : origem[k];
+  }
+  return out as TablesInsert<"animais">;
 }
 
 export function useSalvarAnimal() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (a: Partial<Animal> & { id?: string }) => {
-      const payload = payloadAnimal(a as Record<string, any>);
+      const payload = payloadAnimal(a);
       if (a.id) {
-        const { error } = await supabase.from("animais").update(payload as any).eq("id", a.id);
+        const { error } = await supabase.from("animais").update(payload).eq("id", a.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("animais").insert(payload as any);
+        const { error } = await supabase.from("animais").insert(payload);
         if (error) throw error;
       }
     },
@@ -419,7 +428,7 @@ export function useSalvarAnimal() {
       qc.invalidateQueries({ queryKey: ["animais"] });
       toast.success("Animal salvo");
     },
-    onError: (e: any) => toast.error(e.message ?? "Erro ao salvar"),
+    onError: (e: Error) => toast.error(e.message || "Erro ao salvar"),
   });
 }
 
@@ -434,7 +443,7 @@ export function useExcluirAnimal() {
       qc.invalidateQueries({ queryKey: ["animais"] });
       toast.success("Animal excluído");
     },
-    onError: (e: any) => toast.error(e.message ?? "Erro"),
+    onError: (e: Error) => toast.error(e.message || "Erro"),
   });
 }
 
@@ -458,7 +467,7 @@ export function useSalvarEvento() {
         const { error } = await supabase.from("eventos").update(rest).eq("id", id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("eventos").insert(e as any);
+        const { error } = await supabase.from("eventos").insert(e as TablesInsert<"eventos">);
         if (error) throw error;
       }
     },
@@ -468,7 +477,7 @@ export function useSalvarEvento() {
       qc.invalidateQueries({ queryKey: ["eventos-ativos"] });
       toast.success("Evento salvo");
     },
-    onError: (e: any) => toast.error(e.message ?? "Erro"),
+    onError: (e: Error) => toast.error(e.message || "Erro"),
   });
 }
 
@@ -492,10 +501,10 @@ export function useSalvarConfiguracao() {
     mutationFn: async (c: Partial<Configuracao>) => {
       const { data: existente } = await supabase.from("configuracoes").select("id").limit(1).maybeSingle();
       if (existente?.id) {
-        const { error } = await supabase.from("configuracoes").update(c as any).eq("id", existente.id);
+        const { error } = await supabase.from("configuracoes").update(c as TablesUpdate<"configuracoes">).eq("id", existente.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("configuracoes").insert(c as any);
+        const { error } = await supabase.from("configuracoes").insert(c as TablesInsert<"configuracoes">);
         if (error) throw error;
       }
     },
@@ -503,7 +512,7 @@ export function useSalvarConfiguracao() {
       qc.invalidateQueries({ queryKey: ["configuracao"] });
       toast.success("Configurações salvas");
     },
-    onError: (e: any) => toast.error(e.message ?? "Erro"),
+    onError: (e: Error) => toast.error(e.message || "Erro"),
   });
 }
 

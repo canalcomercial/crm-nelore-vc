@@ -154,7 +154,7 @@ export function useAtualizarContrato() {
       const { error } = await supabase.from('contratos').update(p).eq('id', p.id);
       if (error) throw error;
     },
-    onSuccess: (_, v) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['contratos_venda'] });
       qc.invalidateQueries({ queryKey: ['contratos_all'] });
     },

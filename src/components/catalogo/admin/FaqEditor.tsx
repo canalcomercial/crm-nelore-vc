@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,9 +11,14 @@ export function FaqEditor() {
   const salvar = useSalvarConfiguracao();
   const [itens, setItens] = useState<FaqItem[]>([]);
 
+  // Só semeia o editor quando muda o registro carregado. Reagir a toda mudança
+  // de `config` faria um refetch em background apagar edições não salvas.
+  const idCarregado = useRef<string | null>(null);
   useEffect(() => {
-    if (config?.faq) setItens(config.faq);
-  }, [config?.id]);
+    if (!config || idCarregado.current === config.id) return;
+    idCarregado.current = config.id;
+    if (config.faq) setItens(config.faq);
+  }, [config]);
 
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
@@ -51,7 +56,7 @@ export function FaqEditor() {
         <Button variant="outline" size="sm" onClick={() => setItens([...itens, { titulo: "", conteudo: "" }])} className="gap-1.5">
           <Plus className="h-4 w-4" /> Novo chip
         </Button>
-        <Button onClick={() => salvar.mutate({ faq: itens } as any)} disabled={salvar.isPending}>
+        <Button onClick={() => salvar.mutate({ faq: itens })} disabled={salvar.isPending}>
           {salvar.isPending ? "Salvando..." : "Salvar FAQ"}
         </Button>
       </div>

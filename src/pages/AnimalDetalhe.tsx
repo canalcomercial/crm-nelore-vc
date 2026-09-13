@@ -44,15 +44,17 @@ export default function AnimalDetalhePage() {
   useEffect(() => {
     const root = document.documentElement;
     const prevP = root.style.getPropertyValue("--catalog-primary");
+    const prevA = root.style.getPropertyValue("--catalog-accent");
     const prevB = root.style.getPropertyValue("--catalog-bg");
     root.style.setProperty("--catalog-primary", layout.cor_primary);
     root.style.setProperty("--catalog-accent", layout.cor_accent ?? LAYOUT_PADRAO.cor_accent ?? layout.cor_primary);
     root.style.setProperty("--catalog-bg", layout.cor_bg);
     return () => {
       if (prevP) root.style.setProperty("--catalog-primary", prevP); else root.style.removeProperty("--catalog-primary");
+      if (prevA) root.style.setProperty("--catalog-accent", prevA); else root.style.removeProperty("--catalog-accent");
       if (prevB) root.style.setProperty("--catalog-bg", prevB); else root.style.removeProperty("--catalog-bg");
     };
-  }, [layout.cor_primary, layout.cor_bg]);
+  }, [layout.cor_primary, layout.cor_accent, layout.cor_bg]);
 
   const proximoLote = useMemo(() => {
     if (!animal || !todos.length) return null;

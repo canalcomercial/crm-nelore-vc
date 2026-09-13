@@ -1,6 +1,6 @@
 // Reprocessa um evento do meta_eventos_log rodando o mesmo pipeline do webhook.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { processarLeadgen } from "../_shared/meta-processar.ts";
+import { processarLeadgen, type EventoLeadgen } from "../_shared/meta-processar.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       .single();
     if (fetchErr || !evento) throw new Error("evento não encontrado");
 
-    const result = await processarLeadgen(evento.payload as any);
+    const result = await processarLeadgen(evento.payload as EventoLeadgen);
     await admin.from("meta_eventos_log").insert({
       leadgen_id: evento.leadgen_id,
       form_id: evento.form_id,

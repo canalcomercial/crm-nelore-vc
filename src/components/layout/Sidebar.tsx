@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Columns3, DollarSign, BarChart3, Send, CheckSquare, Users, LogOut, Database, Upload, Store, Settings, Menu } from "lucide-react";
 import { useFollowUpsVencidos } from "@/hooks/useCrm";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth-context";
 import { cn } from "@/lib/utils";
 import logoNelore from "@/assets/logo-nelore-vc.png";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const items = [
   { to: "/", icon: Columns3, label: "Funis" },

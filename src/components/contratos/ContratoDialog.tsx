@@ -56,9 +56,19 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
     }
   }, [open, contratosExistentes]);
 
-  // Pré-carrega campos extras a partir da venda ao abrir / mudar de tipo
+  // Pré-carrega campos extras a partir da venda ao abrir / mudar de tipo.
+  // A chave garante que um refetch de `venda` não sobrescreva o que o usuário
+  // já digitou — só relê quando muda a venda ou o tipo de contrato.
+  const extrasSemeados = useRef<string | null>(null);
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      extrasSemeados.current = null;
+      return;
+    }
+    const chave = `${venda.id}|${tipo}`;
+    if (extrasSemeados.current === chave) return;
+    extrasSemeados.current = chave;
+
     const src = (venda.campos_extras ?? {}) as Record<string, unknown>;
     const next: Record<string, string> = {};
     for (const f of CAMPOS_EXTRAS_POR_TIPO[tipo]) {
@@ -67,7 +77,7 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
     }
     setExtras(next);
     setHtmlEditado(null);
-  }, [open, tipo, venda.id]);
+  }, [open, tipo, venda]);
 
   const htmlBase = useMemo(() => {
     if (contrato) return contrato.conteudo_final;

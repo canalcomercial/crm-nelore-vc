@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useTemplateAtivo, useSalvarTemplate } from '@/hooks/useContratos';
@@ -10,7 +10,6 @@ import {
 } from '@/types/contratos';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Copy, Loader2, Eye, Code } from 'lucide-react';
-import { toast } from 'sonner';
 import { sanitizeContratoHtml } from '@/lib/sanitize-html';
 
 
@@ -23,10 +22,16 @@ export function TemplateEditor() {
   const [modo, setModo] = useState<'edit' | 'preview'>('edit');
   const taRef = useRef<HTMLTextAreaElement>(null);
 
+  // Só semeia o editor quando muda o template selecionado. Reagir a toda
+  // mudança de `tpl` faria um refetch em background apagar edições não salvas.
+  const idCarregado = useRef<string | null>(null);
   useEffect(() => {
+    const id = tpl?.id ?? null;
+    if (idCarregado.current === id) return;
+    idCarregado.current = id;
     if (tpl) { setHtml(tpl.conteudo_html); setNome(tpl.nome); }
     else { setHtml(''); setNome(''); }
-  }, [tpl?.id]);
+  }, [tpl]);
 
   const variaveis = useMemo(
     () => [...VARIAVEIS_COMUNS, ...VARIAVEIS_POR_TIPO[tipo]],
