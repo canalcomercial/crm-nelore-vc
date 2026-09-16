@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "crm-nelore-vc",
-  "compatibility_date": "2026-09-13",
+  "compatibility_date": "2026-09-16",
 
   // Site estático servido pela rede do Cloudflare (Workers Static Assets).
   // `single-page-application` faz qualquer caminho não encontrado cair no
@@ -11,5 +11,20 @@
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application"
+  },
+
+  // Domínio próprio. A zona nelorevc.com já está no Cloudflare (nameservers
+  // javier/wanda.ns.cloudflare.com) e não tinha registro A nem CNAME no apex
+  // nem no www — então nada é sobrescrito. No deploy, o wrangler cria os
+  // registros DNS e emite o certificado automaticamente.
+  "routes": [
+    { "pattern": "nelorevc.com", "custom_domain": true },
+    { "pattern": "www.nelorevc.com", "custom_domain": true }
+  ],
+
+  // Logs no painel (Workers → crm-nelore-vc → Logs).
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
   }
 }

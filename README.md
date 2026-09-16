@@ -72,8 +72,17 @@ npx wrangler login     # abre o navegador, uma única vez
 npm run deploy         # build + deploy; imprime a URL ao final
 ```
 
-A URL sai como `https://crm-nelore-vc.<sua-conta>.workers.dev`. Para domínio
-próprio: Workers → o worker → Settings → Domains & Routes.
+**Domínio próprio já configurado.** O `wrangler.jsonc` traz `nelorevc.com` e
+`www.nelorevc.com` como Custom Domains. No primeiro deploy o wrangler cria os
+registros DNS e emite o certificado sozinho — a zona já está no Cloudflare e o
+apex não tinha registro A nem CNAME, então nada é sobrescrito.
+
+Além do domínio, o worker continua acessível em
+`https://crm-nelore-vc.<sua-conta>.workers.dev`.
+
+Para usar outro domínio, troque os `routes` no `wrangler.jsonc` e ajuste
+`VITE_PUBLIC_SITE_URL` no `.env` — é ela que monta os links de contrato,
+formulário e página comercial.
 
 Em CI (sem navegador), use um API token no lugar do `login`:
 
