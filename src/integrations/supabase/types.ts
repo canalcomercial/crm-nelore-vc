@@ -29,6 +29,7 @@ export type Database = {
           criado_em: string
           descricao_longa: string | null
           destaque: boolean
+          embriao: Json | null
           estado_reprodutivo: string | null
           evento_id: string | null
           fazenda: string | null
@@ -74,6 +75,7 @@ export type Database = {
           criado_em?: string
           descricao_longa?: string | null
           destaque?: boolean
+          embriao?: Json | null
           estado_reprodutivo?: string | null
           evento_id?: string | null
           fazenda?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           criado_em?: string
           descricao_longa?: string | null
           destaque?: boolean
+          embriao?: Json | null
           estado_reprodutivo?: string | null
           evento_id?: string | null
           fazenda?: string | null
@@ -218,14 +221,20 @@ export type Database = {
         Row: {
           atualizado_em: string
           cep: string | null
+          cib: string | null
           cidade: string
           cnpj: string
+          codigo_propriedade: string | null
           criado_em: string
           email: string | null
           endereco: string
+          endereco_propriedade: string | null
+          fazenda_nome: string | null
           foro: string
           id: string
           inscricao_estadual: string | null
+          municipio_propriedade: string | null
+          nirf: string | null
           razao_social: string
           representante_cargo: string | null
           representante_cpf: string
@@ -236,14 +245,20 @@ export type Database = {
         Insert: {
           atualizado_em?: string
           cep?: string | null
+          cib?: string | null
           cidade?: string
           cnpj?: string
+          codigo_propriedade?: string | null
           criado_em?: string
           email?: string | null
           endereco?: string
+          endereco_propriedade?: string | null
+          fazenda_nome?: string | null
           foro?: string
           id?: string
           inscricao_estadual?: string | null
+          municipio_propriedade?: string | null
+          nirf?: string | null
           razao_social?: string
           representante_cargo?: string | null
           representante_cpf?: string
@@ -254,14 +269,20 @@ export type Database = {
         Update: {
           atualizado_em?: string
           cep?: string | null
+          cib?: string | null
           cidade?: string
           cnpj?: string
+          codigo_propriedade?: string | null
           criado_em?: string
           email?: string | null
           endereco?: string
+          endereco_propriedade?: string | null
+          fazenda_nome?: string | null
           foro?: string
           id?: string
           inscricao_estadual?: string | null
+          municipio_propriedade?: string | null
+          nirf?: string | null
           razao_social?: string
           representante_cargo?: string | null
           representante_cpf?: string
@@ -451,24 +472,30 @@ export type Database = {
           criado_em: string
           data: string | null
           descricao: string | null
+          detalhes: Json
           id: string
           nome: string
+          tipo: string
         }
         Insert: {
           ativo?: boolean
           criado_em?: string
           data?: string | null
           descricao?: string | null
+          detalhes?: Json
           id?: string
           nome: string
+          tipo?: string
         }
         Update: {
           ativo?: boolean
           criado_em?: string
           data?: string | null
           descricao?: string | null
+          detalhes?: Json
           id?: string
           nome?: string
+          tipo?: string
         }
         Relationships: []
       }
@@ -676,22 +703,27 @@ export type Database = {
           arquivado_em: string | null
           atualizado_em: string
           campos_extras: Json
+          cib: string | null
           cidade: string | null
+          codigo_propriedade: string | null
           cpf: string | null
           criado_em: string
           deletado_em: string | null
           detalhes_perda: string | null
+          endereco_propriedade: string | null
           entrou_etapa_em: string
           estado: string | null
           etapa: string | null
           fazenda: string | null
           funil_id: string | null
           id: string
+          inscricao_estadual: string | null
           interesse: string | null
           meta_form_id: string | null
           meta_form_nome: string | null
           meta_lead_id: string | null
           motivo_perda: string | null
+          nirf: string | null
           nome: string
           numero: number
           observacoes: string | null
@@ -709,22 +741,27 @@ export type Database = {
           arquivado_em?: string | null
           atualizado_em?: string
           campos_extras?: Json
+          cib?: string | null
           cidade?: string | null
+          codigo_propriedade?: string | null
           cpf?: string | null
           criado_em?: string
           deletado_em?: string | null
           detalhes_perda?: string | null
+          endereco_propriedade?: string | null
           entrou_etapa_em?: string
           estado?: string | null
           etapa?: string | null
           fazenda?: string | null
           funil_id?: string | null
           id?: string
+          inscricao_estadual?: string | null
           interesse?: string | null
           meta_form_id?: string | null
           meta_form_nome?: string | null
           meta_lead_id?: string | null
           motivo_perda?: string | null
+          nirf?: string | null
           nome: string
           numero?: number
           observacoes?: string | null
@@ -742,22 +779,27 @@ export type Database = {
           arquivado_em?: string | null
           atualizado_em?: string
           campos_extras?: Json
+          cib?: string | null
           cidade?: string | null
+          codigo_propriedade?: string | null
           cpf?: string | null
           criado_em?: string
           deletado_em?: string | null
           detalhes_perda?: string | null
+          endereco_propriedade?: string | null
           entrou_etapa_em?: string
           estado?: string | null
           etapa?: string | null
           fazenda?: string | null
           funil_id?: string | null
           id?: string
+          inscricao_estadual?: string | null
           interesse?: string | null
           meta_form_id?: string | null
           meta_form_nome?: string | null
           meta_lead_id?: string | null
           motivo_perda?: string | null
+          nirf?: string | null
           nome?: string
           numero?: number
           observacoes?: string | null

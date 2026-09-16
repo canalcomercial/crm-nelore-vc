@@ -8,9 +8,16 @@ import {
   useConfiguracao,
   useEventoAtivo,
   useOutrosLotes,
+  useEvento,
+  useAnimaisPorEvento,
   LAYOUT_PADRAO,
+  ehEmbriao,
   type CatalogoLayout,
 } from "@/hooks/useCatalogo";
+import { FichaEmbriao } from "@/components/catalogo/embrioes/FichaEmbriao";
+import { CardConversaoEmbriao } from "@/components/catalogo/embrioes/CardConversaoEmbriao";
+import { OutrosPacotes } from "@/components/catalogo/embrioes/OutrosPacotes";
+import { msgInteresseEmbriao, msgPropostaEmbriao } from "@/lib/embrioes";
 import { FichaCatalogo } from "@/components/catalogo/detalhe/FichaCatalogo";
 import { FaqChips } from "@/components/catalogo/detalhe/FaqChips";
 import { OutrosLotes } from "@/components/catalogo/detalhe/OutrosLotes";
@@ -25,14 +32,22 @@ export default function AnimalDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const { data: animal, isLoading } = useAnimal(id);
   const { data: config } = useConfiguracao();
-  const { data: evento } = useEventoAtivo();
-  const { data: outros = [] } = useOutrosLotes(id);
-  const { data: todos = [] } = useAnimais({ apenasAtivos: true });
+  const { data: eventoAtivo } = useEventoAtivo();
+  const { data: outrosGerais = [] } = useOutrosLotes(id);
+  const { data: todosGerais = [] } = useAnimais({ apenasAtivos: true });
+  // Pacote de embriões: mesma página, com ficha de embriões e navegação dentro do próprio evento.
+  const embriao = ehEmbriao(animal);
+  const { data: eventoDoLote } = useEvento(embriao ? animal?.evento_id : null);
+  const { data: lotesDoEvento = [] } = useAnimaisPorEvento(embriao ? animal?.evento_id ?? undefined : undefined);
+  const evento = embriao ? eventoDoLote ?? null : eventoAtivo;
+  const todos = embriao && lotesDoEvento.length ? lotesDoEvento : todosGerais;
+  const outros = embriao ? lotesDoEvento.filter((a) => a.id !== id) : outrosGerais;
+  const catalogoHref = embriao && animal?.evento_id ? `/catalogo?evento=${animal.evento_id}` : "/catalogo";
 
   const layout: CatalogoLayout = (config?.layout as CatalogoLayout | null) ?? LAYOUT_PADRAO;
 
   const abrirWhatsAppAnimal = (mensagem: string) => {
-    const numero = config?.whatsapp?.replace(/\D/g, "");
+    const numero = ((embriao && (evento?.detalhes?.whatsapp || animal?.embriao?.whatsapp)) || config?.whatsapp || "").replace(/\D/g, "");
     if (!numero) {
       toast.error("WhatsApp da fazenda ainda não foi configurado.");
       return;
@@ -92,6 +107,9 @@ export default function AnimalDetalhePage() {
     );
   }
 
+  const msgProposta = embriao ? msgPropostaEmbriao(animal, evento?.nome) : msgPropostaAnimal(animal);
+  const msgInteresse = embriao ? msgInteresseEmbriao(animal, evento?.nome) : msgInteresseAnimal(animal);
+
   return (
     <div
       className="min-h-screen text-neutral-900 pb-24 lg:pb-10"
@@ -106,7 +124,7 @@ export default function AnimalDetalhePage() {
       <header className="sticky top-0 z-40 px-3 sm:px-4 pt-3">
         <div className="max-w-5xl mx-auto rounded-2xl border border-black/5 bg-white/90 backdrop-blur-md shadow-sm">
           <div className="px-4 h-14 sm:h-16 flex items-center gap-4">
-            <Link to="/catalogo" className="flex items-center gap-2 min-w-0">
+            <Link to={catalogoHref} className="flex items-center gap-2 min-w-0">
               <img src={logo} alt="Nelore VC" className="h-9 w-9 rounded-full object-cover" />
               <span className="font-display text-base sm:text-lg font-semibold text-[hsl(var(--catalog-primary))] truncate">
                 Nelore VC
@@ -116,13 +134,13 @@ export default function AnimalDetalhePage() {
               <a href="#dados" className="hover:text-[hsl(var(--catalog-primary))]">Informações</a>
               <a href="#lotes" className="hover:text-[hsl(var(--catalog-primary))]">Outros lotes</a>
               <Link
-                to="/catalogo"
+                to={catalogoHref}
                 className="rounded-full bg-[hsl(var(--catalog-primary))] text-white px-4 py-1.5 text-xs font-semibold hover:brightness-110"
               >
                 Voltar ao catálogo
               </Link>
             </nav>
-            <Link to="/catalogo" className="md:hidden ml-auto text-xs font-semibold text-[hsl(var(--catalog-primary))]">
+            <Link to={catalogoHref} className="md:hidden ml-auto text-xs font-semibold text-[hsl(var(--catalog-primary))]">
               Catálogo
             </Link>
           </div>
@@ -132,7 +150,7 @@ export default function AnimalDetalhePage() {
       {/* Breadcrumb + próximo */}
       <div className="max-w-5xl mx-auto px-4 pt-4 pb-3 flex items-center justify-between text-xs text-neutral-500">
         <div className="flex items-center gap-1.5 min-w-0">
-          <Link to="/catalogo" className="hover:text-[hsl(var(--catalog-primary))] whitespace-nowrap">Catálogo</Link>
+          <Link to={catalogoHref} className="hover:text-[hsl(var(--catalog-primary))] whitespace-nowrap">{embriao ? "Embriões" : "Catálogo"}</Link>
           {evento?.nome && (
             <>
               <ChevronRight className="h-3 w-3" />
@@ -154,27 +172,39 @@ export default function AnimalDetalhePage() {
 
       {/* Ficha em formato de catálogo */}
       <div className="max-w-5xl mx-auto px-3 sm:px-4 space-y-6 sm:space-y-10">
-        <FichaCatalogo
-          animal={animal}
-          onProposta={() => abrirWhatsAppAnimal(msgPropostaAnimal(animal))}
-          mostrarFichaCompleta={layout.mostrar_ficha_completa === true}
-        />
+        {embriao ? (
+          <>
+            <FichaEmbriao animal={animal} onProposta={() => abrirWhatsAppAnimal(msgProposta)} />
+            <CardConversaoEmbriao
+              animal={animal}
+              onProposta={() => abrirWhatsAppAnimal(msgProposta)}
+              onLead={() => abrirWhatsAppAnimal(msgInteresse)}
+            />
+          </>
+        ) : (
+          <>
+            <FichaCatalogo
+              animal={animal}
+              onProposta={() => abrirWhatsAppAnimal(msgProposta)}
+              mostrarFichaCompleta={layout.mostrar_ficha_completa === true}
+            />
+            <CardConversao
+              animal={animal}
+              onProposta={() => abrirWhatsAppAnimal(msgProposta)}
+              onLead={() => abrirWhatsAppAnimal(msgInteresse)}
+            />
+          </>
+        )}
 
-        <CardConversao
-          animal={animal}
-          onProposta={() => abrirWhatsAppAnimal(msgPropostaAnimal(animal))}
-          onLead={() => abrirWhatsAppAnimal(msgInteresseAnimal(animal))}
-        />
-
-        {animal.registrado_abcz && (
+        {!embriao && animal.registrado_abcz && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 text-sm px-4 py-2.5 flex items-center gap-2">
             <ShieldCheck className="h-4 w-4" /> Animal registrado na ABCZ
           </div>
         )}
 
-        {layout.mostrar_ficha_completa === true && <DadosCompletos animal={animal} />}
+        {!embriao && layout.mostrar_ficha_completa === true && <DadosCompletos animal={animal} />}
 
-        {animal.avaliacoes && animal.avaliacoes.length > 0 && (
+        {!embriao && animal.avaliacoes && animal.avaliacoes.length > 0 && (
           <section>
             <header className="flex items-baseline gap-3 mb-3">
               <h2 className="font-display text-xl sm:text-2xl font-semibold text-neutral-900">Avaliação genética</h2>
@@ -211,7 +241,7 @@ export default function AnimalDetalhePage() {
         )}
 
         <div id="lotes">
-          <OutrosLotes lotes={outros} />
+          {embriao ? <OutrosPacotes lotes={outros} /> : <OutrosLotes lotes={outros} />}
         </div>
       </div>
 

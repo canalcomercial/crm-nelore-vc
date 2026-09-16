@@ -20,7 +20,7 @@ export function FormulariosTab() {
   const excluir = useExcluirFormularioMeta();
   const listar = useListarFormsMeta();
 
-  const [editing, setEditing] = useState<Partial<MetaFormulario> | null>(null);
+  const [editing, setEditing] = useState<MetaFormulario | null>(null);
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [descoberta, setDescoberta] = useState<Awaited<ReturnType<typeof listar.mutateAsync>> | null>(null);
@@ -63,6 +63,7 @@ export function FormulariosTab() {
                     <Button variant="ghost" size="sm" className="h-6 text-[10px]"
                       onClick={() => {
                         setEditing({
+                          id: "",
                           form_id: f.id,
                           form_nome: f.name,
                           page_id: p.page_id,
@@ -72,6 +73,8 @@ export function FormulariosTab() {
                           responsavel_id: null,
                           mapa_campos: {},
                           ativo: true,
+                          criado_em: "",
+                          atualizado_em: "",
                         });
                         setOpen(true);
                       }}

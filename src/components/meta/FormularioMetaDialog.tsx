@@ -12,8 +12,7 @@ import { useSalvarFormularioMeta, type MetaFormulario } from "@/hooks/useMeta";
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  /** Formulário existente, ou rascunho vindo da descoberta na Meta (ainda sem id). */
-  formulario?: Partial<MetaFormulario> | null;
+  formulario?: MetaFormulario | null;
 };
 
 export function FormularioMetaDialog({ open, onOpenChange, formulario }: Props) {
@@ -47,8 +46,7 @@ export function FormularioMetaDialog({ open, onOpenChange, formulario }: Props) 
     if (!form.form_id) return;
     salvar.mutate(
       {
-        // Sem id: é um formulário novo, e o hook faz insert em vez de update.
-        ...(form.id ? { id: form.id } : {}),
+        id: form.id,
         form_id: form.form_id,
         form_nome: form.form_nome ?? null,
         page_id: form.page_id ?? null,
@@ -67,7 +65,7 @@ export function FormularioMetaDialog({ open, onOpenChange, formulario }: Props) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{formulario?.id ? "Editar formulário Meta" : "Novo formulário Meta"}</DialogTitle>
+          <DialogTitle>{formulario ? "Editar formulário Meta" : "Novo formulário Meta"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-2 gap-3">

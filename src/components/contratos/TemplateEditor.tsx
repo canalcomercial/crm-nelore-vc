@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useTemplateAtivo, useSalvarTemplate } from '@/hooks/useContratos';
@@ -9,8 +9,10 @@ import {
   type ContratoTipo,
 } from '@/types/contratos';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Copy, Loader2, Eye, Code } from 'lucide-react';
+import { FileText, Copy, Loader2, Eye, Code, Wand2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { sanitizeContratoHtml } from '@/lib/sanitize-html';
+import { TEMPLATE_NELORE_VC_HTML, TEMPLATE_NELORE_VC_NOME } from '@/lib/templates/contrato-nelore-vc';
 
 
 export function TemplateEditor() {
@@ -22,15 +24,18 @@ export function TemplateEditor() {
   const [modo, setModo] = useState<'edit' | 'preview'>('edit');
   const taRef = useRef<HTMLTextAreaElement>(null);
 
-  // Só semeia o editor quando muda o template selecionado. Reagir a toda
-  // mudança de `tpl` faria um refetch em background apagar edições não salvas.
+  // Semeia o editor só quando muda o template carregado. Reagir a toda mudança
+  // de `tpl` faria um refetch em background apagar edições não salvas.
   const idCarregado = useRef<string | null>(null);
   useEffect(() => {
-    const id = tpl?.id ?? null;
-    if (idCarregado.current === id) return;
-    idCarregado.current = id;
-    if (tpl) { setHtml(tpl.conteudo_html); setNome(tpl.nome); }
-    else { setHtml(''); setNome(''); }
+    if (tpl) {
+      if (idCarregado.current === tpl.id) return;
+      idCarregado.current = tpl.id;
+      setHtml(tpl.conteudo_html); setNome(tpl.nome);
+    } else {
+      idCarregado.current = null;
+      setHtml(''); setNome('');
+    }
   }, [tpl]);
 
   const variaveis = useMemo(
@@ -73,6 +78,21 @@ export function TemplateEditor() {
             />
           </div>
           <div className="flex gap-1">
+            {tipo === 'bovinos' && (
+              <Button
+                variant="outline"
+                size="sm"
+                title="Carrega o modelo oficial Nelore VC (nota de leilão + nota promissória + cláusulas). Clique em Salvar template para gravar."
+                onClick={() => {
+                  setHtml(TEMPLATE_NELORE_VC_HTML);
+                  setNome(TEMPLATE_NELORE_VC_NOME);
+                  setModo('preview');
+                  toast.success('Modelo Nelore VC carregado', { description: 'Revise e clique em "Salvar template".' });
+                }}
+              >
+                <Wand2 className="h-3.5 w-3.5 mr-1" /> Aplicar modelo Nelore VC
+              </Button>
+            )}
             <Button variant={modo === 'edit' ? 'default' : 'outline'} size="sm" onClick={() => setModo('edit')}>
               <Code className="h-3.5 w-3.5 mr-1" /> Editar
             </Button>
@@ -81,6 +101,10 @@ export function TemplateEditor() {
             </Button>
           </div>
         </div>
+
+        <p className="text-[10px] text-muted-foreground">
+          Dica: use <code className="font-mono">{'<div class="quebra-pagina"></div>'}</code> para iniciar uma nova página no PDF.
+        </p>
 
         {modo === 'edit' ? (
           <Textarea

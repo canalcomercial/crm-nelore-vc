@@ -74,7 +74,6 @@ export default function VendasPage() {
   );
 
   const anosDisponiveis = useMemo(() => {
-    // `hoje` é recriado a cada render; usar o ano direto mantém o memo estável.
     const set = new Set<number>([new Date().getFullYear()]);
     for (const v of vendas) set.add(new Date(v.data_venda ?? v.criado_em).getFullYear());
     return Array.from(set).sort((a, b) => b - a);

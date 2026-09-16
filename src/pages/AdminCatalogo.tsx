@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Upload, ExternalLink, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, ExternalLink, Image as ImageIcon, Loader2, Dna } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import {
   useAnimais,
@@ -25,11 +26,12 @@ import {
 } from "@/hooks/useCatalogo";
 import { AnimalForm } from "@/components/catalogo/admin/AnimalForm";
 import { ImportarAnimaisDialog } from "@/components/catalogo/admin/ImportarAnimaisDialog";
+import { ImportarEmbrioesDialog } from "@/components/catalogo/embrioes/ImportarEmbrioesDialog";
+import type { EventoDetalhes, EventoTipo } from "@/types/embrioes";
 import { LayoutEditor } from "@/components/catalogo/admin/LayoutEditor";
 import { FaqEditor } from "@/components/catalogo/admin/FaqEditor";
 import { generateCoverForVideo } from "@/lib/frame-extraction";
 import { supabase } from "@/integrations/supabase/client";
-import type { TablesInsert } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -71,6 +73,7 @@ function AnimaisTab() {
   const [editar, setEditar] = useState<Animal | null>(null);
   const [novo, setNovo] = useState(false);
   const [importar, setImportar] = useState(false);
+  const [importarEmbrioes, setImportarEmbrioes] = useState(false);
   const [gerando, setGerando] = useState(false);
   const [progresso, setProgresso] = useState<{ atual: number; total: number } | null>(null);
   const qc = useQueryClient();
@@ -132,6 +135,7 @@ function AnimaisTab() {
               : "Gerar capas dos vídeos"}
           </Button>
           <Button variant="outline" size="sm" onClick={() => setImportar(true)} className="gap-1.5"><Upload className="h-4 w-4" /> Importar CSV</Button>
+          <Button variant="outline" size="sm" onClick={() => setImportarEmbrioes(true)} className="gap-1.5"><Dna className="h-4 w-4" /> Importar embriões</Button>
           <Button size="sm" onClick={() => setNovo(true)} className="gap-1.5"><Plus className="h-4 w-4" /> Novo animal</Button>
         </div>
       </div>
@@ -179,6 +183,7 @@ function AnimaisTab() {
       </div>
       <AnimalForm open={novo || !!editar} onOpenChange={(v) => { if (!v) { setNovo(false); setEditar(null); } }} animal={editar} />
       <ImportarAnimaisDialog open={importar} onOpenChange={setImportar} />
+      <ImportarEmbrioesDialog open={importarEmbrioes} onOpenChange={setImportarEmbrioes} />
     </div>
   );
 }
@@ -189,8 +194,15 @@ function EventoTab() {
   const salvar = useSalvarEvento();
   const excluir = useExcluirEvento();
   const atualizarAnimais = useAtualizarAnimaisEvento();
-  const [form, setForm] = useState<Partial<Evento>>({ ativo: true });
+  const [form, setForm] = useState<Partial<Evento>>({ ativo: true, tipo: "animais" });
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [importarEmbrioes, setImportarEmbrioes] = useState(false);
+  const tipo: EventoTipo = form.tipo === "embrioes" ? "embrioes" : "animais";
+  const detalhes: EventoDetalhes = (form.detalhes ?? {}) as EventoDetalhes;
+  const setDetalhe = (k: keyof EventoDetalhes, v: string) =>
+    setForm((f) => ({ ...f, detalhes: { ...((f.detalhes ?? {}) as EventoDetalhes), [k]: v } }));
+  // Evento de embriões lista só os pacotes de embriões; evento de animais segue igual.
+  const animaisDoTipo = tipo === "embrioes" ? animais.filter((a) => a.categoria === "Embrião" || !!a.embriao) : animais;
 
   const editar = (e: Evento) => {
     setForm(e);
@@ -213,7 +225,7 @@ function EventoTab() {
       }
       toast.success("Evento criado");
     }
-    setForm({ ativo: true });
+    setForm({ ativo: true, tipo: "animais" });
     setSelecionados(new Set());
   };
 
@@ -229,15 +241,46 @@ function EventoTab() {
     <div className="grid md:grid-cols-2 gap-4">
       <div className="bg-surface rounded-lg border p-4 space-y-3">
         <h3 className="font-semibold">{form.id ? "Editar evento" : "Novo evento"}</h3>
+        <div>
+          <Label className="text-xs" htmlFor="evento-tipo">Tipo do evento</Label>
+          <Select value={tipo} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v as EventoTipo }))}>
+            <SelectTrigger id="evento-tipo"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="animais">Animais (fêmeas e touros)</SelectItem>
+              <SelectItem value="embrioes">Embriões — catálogo exclusivo</SelectItem>
+            </SelectContent>
+          </Select>
+          {tipo === "embrioes" && (
+            <p className="text-[11px] text-muted-foreground mt-1">Abre a página de embriões no layout do catálogo Excelência Genética.</p>
+          )}
+        </div>
         <div><Label className="text-xs">Nome</Label><Input value={form.nome ?? ""} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} /></div>
         <div><Label className="text-xs">Data</Label><Input type="date" value={form.data ?? ""} onChange={(e) => setForm((f) => ({ ...f, data: e.target.value }))} /></div>
         <div><Label className="text-xs">Descrição</Label><Textarea rows={4} value={form.descricao ?? ""} onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))} /></div>
+        {tipo === "embrioes" && (
+          <div className="rounded-md border border-dashed p-3 space-y-3">
+            <div className="text-xs font-semibold">Capa do catálogo de embriões</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="col-span-2"><Label className="text-xs">Chamada acima do nome</Label><Input placeholder="Shopping" value={detalhes.subtitulo ?? ""} onChange={(e) => setDetalhe("subtitulo", e.target.value)} /></div>
+              <div><Label className="text-xs">Data final</Label><Input type="date" value={detalhes.data_fim ?? ""} onChange={(e) => setDetalhe("data_fim", e.target.value)} /></div>
+              <div><Label className="text-xs">Horário</Label><Input placeholder="09h às 18h" value={detalhes.horario ?? ""} onChange={(e) => setDetalhe("horario", e.target.value)} /></div>
+              <div className="col-span-2"><Label className="text-xs">Local</Label><Input placeholder="Armazém do Boi | Uberaba-MG" value={detalhes.local ?? ""} onChange={(e) => setDetalhe("local", e.target.value)} /></div>
+              <div><Label className="text-xs">Parcelas (destaque)</Label><Input placeholder="30" value={detalhes.parcelas_destaque ?? ""} onChange={(e) => setDetalhe("parcelas_destaque", e.target.value)} /></div>
+              <div><Label className="text-xs">Parcelas (detalhe)</Label><Input placeholder="(1+29)" value={detalhes.parcelas_detalhe ?? ""} onChange={(e) => setDetalhe("parcelas_detalhe", e.target.value)} /></div>
+              <div className="col-span-2"><Label className="text-xs">Link da playlist</Label><Input placeholder="https://youtube.com/playlist?list=..." value={detalhes.link_playlist ?? ""} onChange={(e) => setDetalhe("link_playlist", e.target.value)} /></div>
+              <div className="col-span-2"><Label className="text-xs">Link das condições</Label><Input placeholder="https://..." value={detalhes.link_condicoes ?? ""} onChange={(e) => setDetalhe("link_condicoes", e.target.value)} /></div>
+              <div><Label className="text-xs">WhatsApp do evento</Label><Input placeholder="5534999999999" value={detalhes.whatsapp ?? ""} onChange={(e) => setDetalhe("whatsapp", e.target.value)} /></div>
+              <div><Label className="text-xs">Instagram</Label><Input placeholder="@nelorevc" value={detalhes.instagram ?? ""} onChange={(e) => setDetalhe("instagram", e.target.value)} /></div>
+              <div className="col-span-2"><Label className="text-xs">Imagem de capa (URL, opcional)</Label><Input placeholder="https://..." value={detalhes.capa_url ?? ""} onChange={(e) => setDetalhe("capa_url", e.target.value)} /></div>
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-2"><Switch checked={form.ativo ?? true} onCheckedChange={(v) => setForm((f) => ({ ...f, ativo: v }))} /><Label className="text-sm">Ativo (aparece no banner)</Label></div>
         <div className="pt-2 border-t">
           <div className="flex items-center justify-between gap-2">
-            <Label className="text-xs font-semibold">Animais deste evento ({selecionados.size} selecionados)</Label>
+            <Label className="text-xs font-semibold">{tipo === "embrioes" ? "Pacotes de embriões" : "Animais"} deste evento ({selecionados.size} selecionados)</Label>
             <div className="flex gap-1">
-              <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelecionados(new Set(animais.map((a) => a.id)))}>
+              <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelecionados(new Set(animaisDoTipo.map((a) => a.id)))}>
                 Selecionar todos
               </Button>
               <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelecionados(new Set())}>
@@ -245,11 +288,20 @@ function EventoTab() {
               </Button>
             </div>
           </div>
-          <p className="text-[11px] text-muted-foreground mb-2">Marque quais animais aparecem no card deste evento na página comercial.</p>
+          <p className="text-[11px] text-muted-foreground mb-2">
+            {tipo === "embrioes"
+              ? "Marque os pacotes que aparecem no catálogo de embriões deste evento — ou importe a planilha direto no evento."
+              : "Marque quais animais aparecem no card deste evento na página comercial."}
+          </p>
+          {tipo === "embrioes" && form.id && (
+            <Button type="button" variant="outline" size="sm" className="mb-2 gap-1.5" onClick={() => setImportarEmbrioes(true)}>
+              <Dna className="h-4 w-4" /> Importar planilha de embriões neste evento
+            </Button>
+          )}
 
           <div className="max-h-60 overflow-y-auto border rounded-md divide-y">
-            {animais.length === 0 && <p className="p-3 text-sm text-muted-foreground">Nenhum animal cadastrado.</p>}
-            {animais.map((a) => {
+            {animaisDoTipo.length === 0 && <p className="p-3 text-sm text-muted-foreground">{tipo === "embrioes" ? "Nenhum pacote de embriões cadastrado." : "Nenhum animal cadastrado."}</p>}
+            {animaisDoTipo.map((a) => {
               const outroEvento = a.evento_id && a.evento_id !== form.id;
               return (
                 <label key={a.id} className={`flex items-center gap-2 p-2 text-sm cursor-pointer hover:bg-muted/40 ${outroEvento ? "opacity-60" : ""}`}>
@@ -268,9 +320,27 @@ function EventoTab() {
           </div>
         </div>
         <div className="flex gap-2">
-          {form.id && <Button variant="outline" onClick={() => { setForm({ ativo: true }); setSelecionados(new Set()); }}>Cancelar</Button>}
+          {form.id && <Button variant="outline" onClick={() => { setForm({ ativo: true, tipo: "animais" }); setSelecionados(new Set()); }}>Cancelar</Button>}
           <Button onClick={submit}>Salvar</Button>
         </div>
+        {form.id && (
+          <ImportarEmbrioesDialog
+            key={form.id}
+            open={importarEmbrioes}
+            onOpenChange={(v) => {
+              setImportarEmbrioes(v);
+              if (!v) {
+                // Atualiza a seleção com os pacotes recém-importados neste evento.
+                setTimeout(() => {
+                  supabase.from("animais").select("id").eq("evento_id", form.id!).then(({ data }) => {
+                    if (data) setSelecionados(new Set(data.map((r) => r.id as string)));
+                  });
+                }, 300);
+              }
+            }}
+            eventoInicial={form.id}
+          />
+        )}
       </div>
       <div className="bg-surface rounded-lg border p-4">
         <h3 className="font-semibold mb-3">Eventos cadastrados</h3>
@@ -279,9 +349,12 @@ function EventoTab() {
           {eventos.map((e) => (
             <div key={e.id} className="flex items-center gap-2 border rounded p-2">
               <div className="flex-1">
-                <div className="text-sm font-medium flex items-center gap-2">{e.nome} {e.ativo && <Badge>Ativo</Badge>}</div>
+                <div className="text-sm font-medium flex items-center gap-2 flex-wrap">{e.nome} {e.ativo && <Badge>Ativo</Badge>}{e.tipo === "embrioes" && <Badge variant="outline">Embriões</Badge>}</div>
                 <div className="text-xs text-muted-foreground">{e.data ?? "sem data"}</div>
               </div>
+              {e.tipo === "embrioes" && (
+                <Button asChild variant="ghost" size="icon" title="Abrir catálogo de embriões"><Link to={`/catalogo?evento=${e.id}`} target="_blank"><ExternalLink className="h-4 w-4" /></Link></Button>
+              )}
               <Button variant="ghost" size="icon" onClick={() => editar(e)}><Pencil className="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Excluir ${e.nome}?`)) excluir.mutate(e.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>

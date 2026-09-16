@@ -13,6 +13,12 @@ export type Lead = {
   fazenda: string | null;
   telefone: string | null;
   cpf: string | null;
+  /** Documentação da propriedade (editável em "Editar lead"; não exibida no painel) */
+  endereco_propriedade?: string | null;
+  inscricao_estadual?: string | null;
+  nirf?: string | null;
+  cib?: string | null;
+  codigo_propriedade?: string | null;
   status_cadastro: StatusCadastro;
   cidade: string | null;
   estado: string | null;
