@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAuth } from "@/hooks/auth-context";
+import { useAuth } from "@/hooks/useAuth";
 import { useEquipe, useCriarMembro, useAtualizarRole, useToggleAtivo, useExcluirMembro, type MembroEquipe } from "@/hooks/useEquipe";
-import type { AppRole } from "@/hooks/auth-context";
+import type { AppRole } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

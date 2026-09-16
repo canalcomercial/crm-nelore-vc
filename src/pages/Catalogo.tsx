@@ -1,28 +1,35 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import type { CSSPropertiesComVars } from "@/lib/utils";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimalCard } from "@/components/catalogo/AnimalCard";
+import { AnimalModal } from "@/components/catalogo/AnimalModal";
 import { useAnimais, useConfiguracao, useEventosAtivos, ordenarPorLote, LAYOUT_PADRAO, type Animal, type CatalogoLayout } from "@/hooks/useCatalogo";
 import { abrirWhatsApp, msgInteresseAnimal } from "@/lib/whatsapp";
 import { toast } from "sonner";
 import logo from "@/assets/logo-nelore-vc.png";
+import EmbrioesCatalogoPage from "@/pages/EmbrioesCatalogo";
 
 type OrdemKey = "padrao" | "maior_preco" | "menor_preco" | "maior_iabcz";
 const CATEGORIAS = ["Todas", "Touro", "Matriz", "Garrote", "Embrião"];
 
 export default function CatalogoPage() {
   const { data: animais = [], isLoading } = useAnimais({ apenasAtivos: true });
-  const { data: eventosAtivos = [] } = useEventosAtivos();
+  const { data: todosEventosAtivos = [] } = useEventosAtivos();
+  const navigate = useNavigate();
+  // Eventos de embriões têm catálogo próprio; a vitrine padrão segue só com os de animais.
+  const eventosAtivos = useMemo(() => todosEventosAtivos.filter((e) => e.tipo !== "embrioes"), [todosEventosAtivos]);
+  const eventosEmbrioes = useMemo(() => todosEventosAtivos.filter((e) => e.tipo === "embrioes"), [todosEventosAtivos]);
   const { data: config } = useConfiguracao();
   const [ordem, setOrdem] = useState<OrdemKey>("padrao");
+  const [modal, setModal] = useState<Animal | null>(null);
   const [params] = useSearchParams();
   // A landing manda ?categoria=Touro para abrir o catálogo já filtrado.
   const [categoria, setCategoria] = useState<string>(params.get("categoria") ?? "Todas");
   const isPreview = params.get("preview") === "layout";
   const eventoParam = params.get("evento");
+  const eventoEmbrioes = eventoParam ? eventosEmbrioes.find((e) => e.id === eventoParam) ?? null : null;
   const eventoIdxFromParam = eventoParam ? eventosAtivos.findIndex((e) => e.id === eventoParam) : -1;
   const [eventoIdxState, setEventoIdxState] = useState(0);
   const eventoIdx = eventoIdxFromParam >= 0 ? eventoIdxFromParam : eventoIdxState;
@@ -103,15 +110,19 @@ export default function CatalogoPage() {
     if (a.link_video) window.open(a.link_video, "_blank");
   };
 
+  if (eventoEmbrioes) {
+    return <EmbrioesCatalogoPage evento={eventoEmbrioes} outrosEventos={todosEventosAtivos.filter((e) => e.id !== eventoEmbrioes.id)} />;
+  }
+
   return (
     <div
       className="min-h-screen text-neutral-900"
-      // Aplica o tema via CSS vars locais, para a prévia refletir o layout salvo.
       style={{
-        "--catalog-primary": layout.cor_primary,
-        "--catalog-bg": layout.cor_bg,
+        // Aplica temas via CSS vars locais para prévia
+        ["--catalog-primary" as any]: layout.cor_primary,
+        ["--catalog-bg" as any]: layout.cor_bg,
         backgroundColor: `hsl(${layout.cor_bg})`,
-      } as CSSPropertiesComVars}
+      }}
     >
       <header className="bg-white border-b border-black/5 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
@@ -149,7 +160,7 @@ export default function CatalogoPage() {
 
       <section id="inicio" className="bg-[hsl(var(--catalog-primary))] text-white">
         <div className="max-w-6xl mx-auto px-4 py-14 md:py-20">
-          {eventosAtivos.length > 1 && (
+          {(eventosAtivos.length > 1 || eventosEmbrioes.length > 0) && (
             <div className="flex flex-wrap gap-2 mb-5">
               {eventosAtivos.map((ev, i) => (
                 <button
@@ -162,6 +173,15 @@ export default function CatalogoPage() {
                   }`}
                 >
                   {ev.nome}
+                </button>
+              ))}
+              {eventosEmbrioes.map((ev) => (
+                <button
+                  key={ev.id}
+                  onClick={() => navigate(`/catalogo?evento=${ev.id}`)}
+                  className="text-xs sm:text-sm px-3 py-1.5 rounded-full border bg-transparent text-white border-white/40 hover:bg-white/10"
+                >
+                  {ev.nome} · Embriões
                 </button>
               ))}
             </div>
@@ -225,7 +245,7 @@ export default function CatalogoPage() {
             <div className="catalog-grid">
               {destaquesCarrossel.map((a) => (
                 <div key={a.id} className="catalog-item">
-                  <AnimalCard animal={a} layout={layout} onInteresse={() => abrirInteresse(a)} onVerVideo={() => abrirVideo(a)} />
+                  <AnimalCard animal={a} layout={layout} onAbrir={() => setModal(a)} onInteresse={() => abrirInteresse(a)} onVerVideo={() => abrirVideo(a)} />
                 </div>
               ))}
             </div>
@@ -234,7 +254,7 @@ export default function CatalogoPage() {
               <div className="mt-6">
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
                   {restantesVisiveis.map((a) => (
-                    <AnimalCard key={a.id} animal={a} layout={layout} onInteresse={() => abrirInteresse(a)} onVerVideo={() => abrirVideo(a)} />
+                    <AnimalCard key={a.id} animal={a} layout={layout} onAbrir={() => setModal(a)} onInteresse={() => abrirInteresse(a)} onVerVideo={() => abrirVideo(a)} />
                   ))}
                 </div>
                 {restantesVisiveis.length < restantes.length && (
@@ -317,6 +337,7 @@ export default function CatalogoPage() {
         </div>
       </footer>
 
+      <AnimalModal animal={modal} open={!!modal} onOpenChange={(v) => !v && setModal(null)} onInteresse={abrirInteresse} />
     </div>
   );
 }

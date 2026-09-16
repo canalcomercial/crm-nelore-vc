@@ -97,17 +97,19 @@ export function useContratosVenda(vendaId: string | null | undefined) {
   });
 }
 
+export type ContratoComCliente = Contrato & { vendas?: { cliente_nome: string | null } | null };
+
 export function useContratos() {
   return useQuery({
     queryKey: ['contratos_all'],
-    queryFn: async (): Promise<Contrato[]> => {
+    queryFn: async (): Promise<ContratoComCliente[]> => {
       const { data, error } = await supabase
         .from('contratos')
-        .select('*')
+        .select('*, vendas(cliente_nome)')
         .order('criado_em', { ascending: false })
         .limit(200);
       if (error) throw error;
-      return (data ?? []) as Contrato[];
+      return (data ?? []) as unknown as ContratoComCliente[];
     },
   });
 }
@@ -154,7 +156,7 @@ export function useAtualizarContrato() {
       const { error } = await supabase.from('contratos').update(p).eq('id', p.id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, v) => {
       qc.invalidateQueries({ queryKey: ['contratos_venda'] });
       qc.invalidateQueries({ queryKey: ['contratos_all'] });
     },

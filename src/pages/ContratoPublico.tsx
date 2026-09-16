@@ -44,7 +44,7 @@ export default function ContratoPublico() {
     }
     setEnviando(true);
     try {
-      const { error } = await supabase.functions.invoke('assinar-contrato', {
+      const { data, error } = await supabase.functions.invoke('assinar-contrato', {
         body: { token, nome: nome.trim(), cpf: cpf.trim(), aceite: true },
       });
       if (error) throw error;

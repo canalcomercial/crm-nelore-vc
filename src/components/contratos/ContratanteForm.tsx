@@ -12,6 +12,8 @@ export function ContratanteForm() {
     razao_social: '', cnpj: '', inscricao_estadual: '', endereco: '',
     cidade: '', uf: '', cep: '', representante_nome: '', representante_cpf: '',
     representante_cargo: '', foro: '', telefone: '', email: '',
+    fazenda_nome: '', endereco_propriedade: '', municipio_propriedade: '',
+    nirf: '', cib: '', codigo_propriedade: '',
   });
 
   useEffect(() => {
@@ -30,6 +32,12 @@ export function ContratanteForm() {
         foro: data.foro || '',
         telefone: data.telefone || '',
         email: data.email || '',
+        fazenda_nome: data.fazenda_nome || '',
+        endereco_propriedade: data.endereco_propriedade || '',
+        municipio_propriedade: data.municipio_propriedade || '',
+        nirf: data.nirf || '',
+        cib: data.cib || '',
+        codigo_propriedade: data.codigo_propriedade || '',
       });
     }
   }, [data]);
@@ -58,6 +66,19 @@ export function ContratanteForm() {
         <Field label="Cargo do representante" value={f.representante_cargo} onChange={(v) => setF({ ...f, representante_cargo: v })} />
         <Field label="Telefone" value={f.telefone} onChange={(v) => setF({ ...f, telefone: v })} />
         <Field label="E-mail" value={f.email} onChange={(v) => setF({ ...f, email: v })} full />
+      </div>
+
+      <div className="pt-2">
+        <h3 className="text-sm font-semibold">Documentação da propriedade (vendedor)</h3>
+        <p className="text-xs text-muted-foreground">Usada na nota de transporte que acompanha o caminhoneiro.</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Nome da fazenda" value={f.fazenda_nome} onChange={(v) => setF({ ...f, fazenda_nome: v })} />
+        <Field label="Município / UF da propriedade" value={f.municipio_propriedade} onChange={(v) => setF({ ...f, municipio_propriedade: v })} />
+        <Field label="Endereço da propriedade" value={f.endereco_propriedade} onChange={(v) => setF({ ...f, endereco_propriedade: v })} full />
+        <Field label="NIRF" value={f.nirf} onChange={(v) => setF({ ...f, nirf: v })} />
+        <Field label="CIB" value={f.cib} onChange={(v) => setF({ ...f, cib: v })} />
+        <Field label="Código da propriedade" value={f.codigo_propriedade} onChange={(v) => setF({ ...f, codigo_propriedade: v })} />
       </div>
 
       <div className="flex justify-end">

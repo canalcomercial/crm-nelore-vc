@@ -1,21 +1,24 @@
 import { useState, useEffect, useMemo } from "react";
-import { X, MessageCircle, Phone, DollarSign, Calendar, XCircle, ArrowRightLeft, Archive, Pencil, Plus, Trash2, User, UserPlus, Check, FileText } from "lucide-react";
+import { X, MessageCircle, Phone, DollarSign, Calendar, XCircle, ArrowRightLeft, Archive, Pencil, Plus, Trash2, Settings2, User, UserPlus, Check, FileText } from "lucide-react";
 import type { Lead, Funil, Venda } from "@/types/crm";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   useFunis, useInteracoes, useUsuarios, useVendasByLead,
   useSalvarAnotacao, useUpdateLeadEtapa, useMarcarPerdido, useUpdateLeadVendedor,
   useArquivarLead, useUpdateLeadCadastro, useUpdateLeadCamposExtras,
   useMotivosPerda, useCriarMotivoPerda, useExcluirMotivoPerda,
+  useAtributosPersonalizados, useCriarAtributo, useExcluirAtributo, useRenomearAtributo,
+  useAtualizarOpcoesAtributo,
   useUpdateLeadDados, useExcluirLead,
 } from "@/hooks/useCrm";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAuth } from "@/hooks/auth-context";
+import { useAuth } from "@/hooks/useAuth";
 import { VendaDialog } from "@/components/vendas/VendaDialog";
 import { EmitirContratoDialog } from "@/components/contratos/EmitirContratoDialog";
 import { cn } from "@/lib/utils";
@@ -741,7 +744,35 @@ type EditarLeadCampos = {
   origem?: string | null;
   interesse?: string | null;
   fazenda?: string | null;
+  endereco_propriedade?: string | null;
+  inscricao_estadual?: string | null;
+  nirf?: string | null;
+  cib?: string | null;
+  codigo_propriedade?: string | null;
 };
+
+function EditarLeadField({
+  label, value, onChange, placeholder, inputMode,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  inputMode?: "text" | "tel" | "numeric";
+}) {
+  return (
+    <div className="space-y-1">
+      <label className="text-[11px] font-medium text-muted-foreground">{label}</label>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        inputMode={inputMode}
+        className="h-8 text-xs"
+      />
+    </div>
+  );
+}
 
 function EditarLeadDialog({
   open, onOpenChange, lead, onSave, saving,
@@ -761,6 +792,11 @@ function EditarLeadDialog({
     origem: lead.origem ?? "",
     interesse: lead.interesse ?? "",
     fazenda: lead.fazenda ?? "",
+    endereco_propriedade: lead.endereco_propriedade ?? "",
+    inscricao_estadual: lead.inscricao_estadual ?? "",
+    nirf: lead.nirf ?? "",
+    cib: lead.cib ?? "",
+    codigo_propriedade: lead.codigo_propriedade ?? "",
   });
 
   useEffect(() => {
@@ -774,6 +810,11 @@ function EditarLeadDialog({
         origem: lead.origem ?? "",
         interesse: lead.interesse ?? "",
         fazenda: lead.fazenda ?? "",
+        endereco_propriedade: lead.endereco_propriedade ?? "",
+        inscricao_estadual: lead.inscricao_estadual ?? "",
+        nirf: lead.nirf ?? "",
+        cib: lead.cib ?? "",
+        codigo_propriedade: lead.codigo_propriedade ?? "",
       });
     }
   }, [open, lead]);
@@ -790,33 +831,19 @@ function EditarLeadDialog({
       origem: form.origem.trim() || null,
       interesse: form.interesse.trim() || null,
       fazenda: form.fazenda.trim() || null,
+      endereco_propriedade: form.endereco_propriedade.trim() || null,
+      inscricao_estadual: form.inscricao_estadual.trim() || null,
+      nirf: form.nirf.trim() || null,
+      cib: form.cib.trim() || null,
+      codigo_propriedade: form.codigo_propriedade.trim() || null,
     });
   };
 
-  const Field = ({
-    label, value, onChange, placeholder, inputMode,
-  }: {
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-    placeholder?: string;
-    inputMode?: "text" | "tel" | "numeric";
-  }) => (
-    <div className="space-y-1">
-      <label className="text-[11px] font-medium text-muted-foreground">{label}</label>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        inputMode={inputMode}
-        className="h-8 text-xs"
-      />
-    </div>
-  );
+  const Field = EditarLeadField;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar lead</DialogTitle>
           <DialogDescription>Atualize os dados do lead.</DialogDescription>
@@ -834,6 +861,22 @@ function EditarLeadDialog({
           <div className="col-span-2">
             <Field label="Interesse" value={form.interesse} onChange={(v) => setForm({ ...form, interesse: v })} />
           </div>
+
+          <div className="col-span-2 pt-2 mt-1 border-t border-border/60">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Documentação da propriedade
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              Usada no contrato e na nota de transporte.
+            </p>
+          </div>
+          <div className="col-span-2">
+            <Field label="Endereço da propriedade" value={form.endereco_propriedade} onChange={(v) => setForm({ ...form, endereco_propriedade: v })} placeholder="Rodovia, km, zona rural, CEP..." />
+          </div>
+          <Field label="Inscrição Estadual" value={form.inscricao_estadual} onChange={(v) => setForm({ ...form, inscricao_estadual: v })} />
+          <Field label="NIRF" value={form.nirf} onChange={(v) => setForm({ ...form, nirf: v })} />
+          <Field label="CIB" value={form.cib} onChange={(v) => setForm({ ...form, cib: v })} />
+          <Field label="Código da Propriedade" value={form.codigo_propriedade} onChange={(v) => setForm({ ...form, codigo_propriedade: v })} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
@@ -908,6 +951,285 @@ function EmailRow({ lead }: { lead: Lead }) {
         className="h-7 text-xs w-[200px] text-right"
       />
     </div>
+  );
+}
+
+function AtributosPersonalizados({ lead }: { lead: Lead }) {
+  const { isCoordenador } = useAuth();
+  const { data: catalogo = [] } = useAtributosPersonalizados();
+  const criarAttr = useCriarAtributo();
+  const excluirAttr = useExcluirAtributo();
+  const renomearAttr = useRenomearAtributo();
+  const updateExtras = useUpdateLeadCamposExtras();
+  const updateOpcoes = useAtualizarOpcoesAtributo();
+
+  const [adicionando, setAdicionando] = useState(false);
+  const [novoNome, setNovoNome] = useState("");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+
+  const extras = (lead.campos_extras ?? {}) as Record<string, string | number | null>;
+
+  const salvarValor = (chave: string, valor: string) => {
+    const next = { ...extras };
+    if (valor) next[chave] = valor;
+    else delete next[chave];
+    updateExtras.mutate({ id: lead.id, campos_extras: next });
+  };
+
+  // Atributos legados (existem no lead mas não no catálogo)
+  const chavesCatalogo = new Set(catalogo.map((a) => a.chave));
+  const legados = Object.keys(extras).filter(
+    (k) => k.startsWith("attr_") && !chavesCatalogo.has(k)
+  );
+
+  const removerLegado = (k: string) => {
+    const next = { ...extras };
+    delete next[k];
+    updateExtras.mutate({ id: lead.id, campos_extras: next });
+  };
+
+  const criar = () => {
+    const n = novoNome.trim();
+    if (!n) return;
+    criarAttr.mutate(
+      { label: n },
+      {
+        onSuccess: () => {
+          setNovoNome("");
+          setAdicionando(false);
+        },
+      }
+    );
+  };
+
+  return (
+    <Section
+      title="Atributos personalizados"
+      right={
+        <button
+          onClick={() => setAdicionando((v) => !v)}
+          className="text-[11px] text-primary font-medium flex items-center gap-1 hover:underline"
+        >
+          <Plus className="h-3 w-3" /> Novo
+        </button>
+      }
+    >
+      {catalogo.length === 0 && legados.length === 0 && !adicionando && (
+        <p className="text-[11px] text-muted-foreground italic">
+          Nenhum atributo cadastrado. Crie um — ele aparecerá em todos os leads.
+        </p>
+      )}
+
+      <div className="space-y-1.5">
+        {catalogo.map((a) => {
+          const opcoes = (a.opcoes ?? []) as string[];
+          const valorAtual = String(extras[a.chave] ?? "");
+          return (
+            <div key={a.id} className="space-y-1">
+              <div className="flex items-center gap-1.5 text-xs">
+                {editId === a.id ? (
+                  <Input
+                    value={editLabel}
+                    onChange={(e) => setEditLabel(e.target.value)}
+                    onBlur={() => {
+                      const v = editLabel.trim();
+                      if (v && v !== a.label) renomearAttr.mutate({ id: a.id, label: v });
+                      setEditId(null);
+                    }}
+                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                    autoFocus
+                    className="h-7 text-xs w-1/3"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => isCoordenador && (setEditId(a.id), setEditLabel(a.label))}
+                    className={cn(
+                      "text-muted-foreground w-1/3 text-left truncate",
+                      isCoordenador && "hover:text-foreground"
+                    )}
+                    title={isCoordenador ? "Renomear" : a.label}
+                  >
+                    {a.label}
+                  </button>
+                )}
+                <Input
+                  defaultValue={valorAtual}
+                  key={a.chave + valorAtual}
+                  onBlur={(e) => {
+                    if (e.target.value !== valorAtual) salvarValor(a.chave, e.target.value);
+                  }}
+                  className="h-7 text-xs flex-1"
+                  placeholder="—"
+                />
+                {isCoordenador && (
+                  <OpcoesAtributoPopover
+                    atributo={a}
+                    onSave={(novas) => updateOpcoes.mutate({ id: a.id, opcoes: novas })}
+                  />
+                )}
+                {isCoordenador && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`Remover o atributo "${a.label}" de todos os leads?`)) {
+                        excluirAttr.mutate(a.id);
+                      }
+                    }}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Remover do catálogo"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+              {opcoes.length > 0 && (
+                <div className="flex flex-wrap gap-1 pl-[33%]">
+                  {opcoes.map((op) => (
+                    <button
+                      key={op}
+                      type="button"
+                      onClick={() => salvarValor(a.chave, valorAtual === op ? "" : op)}
+                      className={cn(
+                        "text-[10px] px-1.5 py-0.5 rounded border transition",
+                        valorAtual === op
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted/40 border-border hover:bg-muted"
+                      )}
+                    >
+                      {op}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {legados.length > 0 && (
+          <div className="pt-2 mt-1 border-t border-dashed border-border space-y-1">
+            <p className="text-[10px] text-muted-foreground">Atributos antigos deste lead:</p>
+            {legados.map((k) => (
+              <div key={k} className="flex items-center gap-1.5 text-xs">
+                <span className="text-muted-foreground capitalize w-1/3 truncate">
+                  {k.replace(/^attr_/, "").replace(/_/g, " ")}
+                </span>
+                <Input
+                  defaultValue={String(extras[k] ?? "")}
+                  onBlur={(e) => salvarValor(k, e.target.value)}
+                  className="h-7 text-xs flex-1"
+                />
+                <button
+                  onClick={() => removerLegado(k)}
+                  className="text-muted-foreground hover:text-destructive"
+                  title="Remover deste lead"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {adicionando && (
+        <div className="flex gap-1.5 mt-2">
+          <Input
+            value={novoNome}
+            onChange={(e) => setNovoNome(e.target.value)}
+            placeholder="Nome do atributo (ex: Orçamento)"
+            className="h-7 text-xs flex-1"
+            autoFocus
+            onKeyDown={(e) => { if (e.key === "Enter") criar(); }}
+          />
+          <Button size="sm" className="h-7 px-2 text-[11px]" onClick={criar} disabled={criarAttr.isPending}>
+            Criar
+          </Button>
+        </div>
+      )}
+      {adicionando && (
+        <p className="text-[10px] text-muted-foreground mt-1">
+          Esse atributo aparecerá em <strong>todos os leads</strong>.
+        </p>
+      )}
+    </Section>
+  );
+}
+
+function OpcoesAtributoPopover({
+  atributo,
+  onSave,
+}: {
+  atributo: { id: string; label: string; opcoes?: string[] };
+  onSave: (opcoes: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [opcoes, setOpcoes] = useState<string[]>(atributo.opcoes ?? []);
+  const [nova, setNova] = useState("");
+
+  useEffect(() => {
+    if (open) setOpcoes(atributo.opcoes ?? []);
+  }, [open, atributo.opcoes]);
+
+  const adicionar = () => {
+    const v = nova.trim();
+    if (!v || opcoes.includes(v)) return;
+    setOpcoes([...opcoes, v]);
+    setNova("");
+  };
+
+  const remover = (i: number) => setOpcoes(opcoes.filter((_, idx) => idx !== i));
+
+  const salvar = () => {
+    onSave(opcoes);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="text-muted-foreground hover:text-foreground"
+          title="Respostas rápidas"
+        >
+          <Settings2 className="h-3 w-3" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-3" align="end">
+        <p className="text-[11px] font-semibold mb-1.5">Respostas rápidas — {atributo.label}</p>
+        <p className="text-[10px] text-muted-foreground mb-2">
+          Aparecem como botões clicáveis para todos os vendedores.
+        </p>
+        <div className="space-y-1 mb-2 max-h-40 overflow-y-auto">
+          {opcoes.length === 0 && (
+            <p className="text-[10px] text-muted-foreground italic">Nenhuma opção ainda.</p>
+          )}
+          {opcoes.map((op, i) => (
+            <div key={i} className="flex items-center gap-1.5 text-xs bg-muted/40 rounded px-2 py-1">
+              <span className="flex-1 truncate">{op}</span>
+              <button onClick={() => remover(i)} className="text-muted-foreground hover:text-destructive">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-1.5 mb-2">
+          <Input
+            value={nova}
+            onChange={(e) => setNova(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); adicionar(); } }}
+            placeholder="Nova opção"
+            className="h-7 text-xs"
+          />
+          <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={adicionar}>
+            <Plus className="h-3 w-3" />
+          </Button>
+        </div>
+        <Button size="sm" className="w-full h-7 text-[11px]" onClick={salvar}>
+          Salvar
+        </Button>
+      </PopoverContent>
+    </Popover>
   );
 }
 

@@ -8,7 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
-import { mensagemDeErro } from "@/lib/erros";
 import { uploadFotoAnimal, useSalvarAnimal, type Animal, type GeneticaAnimal, type SexoAnimal } from "@/hooks/useCatalogo";
 import { GeneticaEditor } from "./GeneticaEditor";
 import { Loader2, Upload } from "lucide-react";
@@ -38,8 +37,8 @@ export function AnimalForm({ open, onOpenChange, animal }: { open: boolean; onOp
     try {
       const url = await uploadFotoAnimal(file);
       set("foto_url", url);
-    } catch (e) {
-      toast.error(mensagemDeErro(e, "Erro no upload"));
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro no upload");
     } finally {
       setUploading(false);
     }

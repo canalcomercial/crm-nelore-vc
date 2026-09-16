@@ -22,7 +22,7 @@ import { CATEGORIAS_VENDA, FORMAS_PAGAMENTO, TIPOS_PARCELAMENTO, type Venda, typ
 import { VendaDialog } from "@/components/vendas/VendaDialog";
 import { ContratoDialog } from "@/components/contratos/ContratoDialog";
 import { LeadPanel } from "@/components/funis/LeadPanel";
-import { useAuth } from "@/hooks/auth-context";
+import { useAuth } from "@/hooks/useAuth";
 import {
   format, startOfDay, endOfDay, startOfMonth, endOfMonth,
   subDays, subMonths, startOfYear, endOfYear, isWithinInterval,
@@ -74,8 +74,7 @@ export default function VendasPage() {
   );
 
   const anosDisponiveis = useMemo(() => {
-    // `hoje` é recriado a cada render; usar o ano direto mantém o memo estável.
-    const set = new Set<number>([new Date().getFullYear()]);
+    const set = new Set<number>([hoje.getFullYear()]);
     for (const v of vendas) set.add(new Date(v.data_venda ?? v.criado_em).getFullYear());
     return Array.from(set).sort((a, b) => b - a);
   }, [vendas]);

@@ -6,14 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, MessageCircle, Copy, FileText, Loader2, CheckCircle2, Pencil, Check, X } from 'lucide-react';
+import { Download, MessageCircle, Copy, FileText, Loader2, CheckCircle2, Pencil, Check, X, Truck, RefreshCw } from 'lucide-react';
 import type { Venda, Lead } from '@/types/crm';
 import {
   useContratante, useTemplateAtivo, useContratosVenda, useCriarContrato,
-  useAtualizarContrato, uploadContratoPdf, signedPdfUrl,
+  useAtualizarContrato, uploadContratoPdf,
 } from '@/hooks/useContratos';
+import { baixarContratoPdf, baixarNotaTransporte } from '@/lib/nota-transporte';
 import { montarVariaveis, renderTemplate } from '@/lib/contrato-render';
-import { htmlParaPdfBlob, sha256 } from '@/lib/contrato-pdf';
+import { htmlParaPdfBlob, sha256, baixarBlob, nomeArquivoSeguro } from '@/lib/contrato-pdf';
 import { sanitizeContratoHtml } from '@/lib/sanitize-html';
 
 import { toast } from 'sonner';
@@ -39,6 +40,7 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
   const [contrato, setContrato] = useState<Contrato | null>(null);
   const [gerando, setGerando] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [baixando, setBaixando] = useState<'contrato' | 'transporte' | null>(null);
   const [editando, setEditando] = useState(false);
   const [htmlEditado, setHtmlEditado] = useState<string | null>(null);
   const [extras, setExtras] = useState<Record<string, string>>({});
@@ -56,19 +58,9 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
     }
   }, [open, contratosExistentes]);
 
-  // Pré-carrega campos extras a partir da venda ao abrir / mudar de tipo.
-  // A chave garante que um refetch de `venda` não sobrescreva o que o usuário
-  // já digitou — só relê quando muda a venda ou o tipo de contrato.
-  const extrasSemeados = useRef<string | null>(null);
+  // Pré-carrega campos extras a partir da venda ao abrir / mudar de tipo
   useEffect(() => {
-    if (!open) {
-      extrasSemeados.current = null;
-      return;
-    }
-    const chave = `${venda.id}|${tipo}`;
-    if (extrasSemeados.current === chave) return;
-    extrasSemeados.current = chave;
-
+    if (!open) return;
     const src = (venda.campos_extras ?? {}) as Record<string, unknown>;
     const next: Record<string, string> = {};
     for (const f of CAMPOS_EXTRAS_POR_TIPO[tipo]) {
@@ -77,7 +69,7 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
     }
     setExtras(next);
     setHtmlEditado(null);
-  }, [open, tipo, venda]);
+  }, [open, tipo, venda.id]);
 
   const htmlBase = useMemo(() => {
     if (contrato) return contrato.conteudo_final;
@@ -149,25 +141,21 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
         c = await criar.mutateAsync({
           venda_id: venda.id,
           template_id: template.id,
-          conteudo_final: html.replace(/PRE-[A-Z0-9]+/, ''),
+          conteudo_final: html.replace(/PRE-[A-Z0-9]+/g, ''),
           tipo,
         });
       }
       // Regenera com número real (a menos que o usuário tenha editado manualmente)
       const vendaComExtras = { ...venda, campos_extras: { ...(venda.campos_extras ?? {}), ...extras } };
       const finalHtml = htmlEditado
-        ? htmlEditado.replace(/PRE-[A-Z0-9]+/, String(c.numero))
+        ? htmlEditado.replace(/PRE-[A-Z0-9]+/g, String(c.numero))
         : renderTemplate(template.conteudo_html, montarVariaveis(vendaComExtras, lead, contratante ?? null, c.numero, tipo));
       await atualizar.mutateAsync({ id: c.id, conteudo_final: finalHtml });
       c = { ...c, conteudo_final: finalHtml };
 
-      const { blob } = await gerarPdfEUpload(c);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `contrato-${c.numero}-${venda.cliente_nome.replace(/\s+/g, '-')}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const { blob, path } = await gerarPdfEUpload(c);
+      c = { ...c, pdf_path: path };
+      baixarBlob(blob, `contrato-${c.numero}-${nomeArquivoSeguro(venda.cliente_nome)}.pdf`);
       setContrato(c);
       toast.success(`Contrato #${c.numero} gerado`);
     } catch (e) {
@@ -191,11 +179,12 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
         });
         const vendaComExtras = { ...venda, campos_extras: { ...(venda.campos_extras ?? {}), ...extras } };
         const finalHtml = htmlEditado
-          ? htmlEditado.replace(/PRE-[A-Z0-9]+/, String(c.numero))
+          ? htmlEditado.replace(/PRE-[A-Z0-9]+/g, String(c.numero))
           : renderTemplate(template.conteudo_html, montarVariaveis(vendaComExtras, lead, contratante ?? null, c.numero, tipo));
         await atualizar.mutateAsync({ id: c.id, conteudo_final: finalHtml });
         c = { ...c, conteudo_final: finalHtml };
-        await gerarPdfEUpload(c);
+        const { path } = await gerarPdfEUpload(c);
+        c = { ...c, pdf_path: path };
       }
 
       const linkAssinatura = `${window.location.origin}/contrato/${c.token_publico}`;
@@ -224,10 +213,25 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
     toast.success('Link copiado');
   };
 
-  const baixarPdfSalvo = async () => {
-    if (!contrato?.pdf_path) return;
-    const url = await signedPdfUrl(contrato.pdf_path);
-    window.open(url, '_blank', 'noopener');
+  const baixarContrato = async () => {
+    if (!contrato) return;
+    setBaixando('contrato');
+    try {
+      await baixarContratoPdf(contrato, venda.cliente_nome);
+    } catch (e) {
+      toast.error('Erro ao baixar contrato', { description: (e as Error).message });
+    } finally { setBaixando(null); }
+  };
+
+  const baixarTransporte = async () => {
+    if (!contrato) return;
+    setBaixando('transporte');
+    try {
+      await persistirExtrasNaVenda();
+      await baixarNotaTransporte(contrato);
+    } catch (e) {
+      toast.error('Erro ao gerar nota de transporte', { description: (e as Error).message });
+    } finally { setBaixando(null); }
   };
 
   return (
@@ -275,7 +279,7 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
         </div>
 
         {CAMPOS_EXTRAS_POR_TIPO[tipo].length > 0 && (
-          <div className="border-b border-border py-3">
+          <div className="border-b border-border py-3 max-h-[32vh] overflow-y-auto">
             <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
               Dados específicos — {LABEL_TIPO[tipo]}
             </h4>
@@ -341,17 +345,26 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
               <Pencil className="h-4 w-4 mr-1.5" /> Editar documento
             </Button>
           )}
-          {contrato?.pdf_path && (
-            <Button variant="outline" onClick={baixarPdfSalvo}>
-              <Download className="h-4 w-4 mr-1.5" /> Baixar PDF salvo
-            </Button>
+          {contrato && (
+            <>
+              <Button onClick={baixarContrato} disabled={baixando !== null || editando}>
+                {baixando === 'contrato' ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
+                Baixar contrato
+              </Button>
+              <Button variant="outline" onClick={baixarTransporte} disabled={baixando !== null || editando}>
+                {baixando === 'transporte' ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Truck className="h-4 w-4 mr-1.5" />}
+                Nota de transporte
+              </Button>
+            </>
           )}
           <Button variant="outline" onClick={copiarLink} disabled={!contrato || editando}>
             <Copy className="h-4 w-4 mr-1.5" /> Copiar link de assinatura
           </Button>
           <Button onClick={handleGerar} disabled={gerando || editando} variant="outline">
-            {gerando ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
-            Gerar e baixar PDF
+            {gerando
+              ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              : contrato ? <RefreshCw className="h-4 w-4 mr-1.5" /> : <Download className="h-4 w-4 mr-1.5" />}
+            {contrato ? 'Regerar PDF' : 'Emitir e baixar contrato'}
           </Button>
           <Button onClick={handleEnviarWhatsApp} disabled={enviando || editando} className="bg-[#25D366] hover:bg-[#20b858] text-white">
             {enviando ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <MessageCircle className="h-4 w-4 mr-1.5" />}

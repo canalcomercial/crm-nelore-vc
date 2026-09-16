@@ -12,11 +12,13 @@ function fmtBRL(v?: number | null) {
 
 export function AnimalCard({
   animal,
+  onAbrir,
   onInteresse,
   onVerVideo,
   layout: layoutProp,
 }: {
   animal: Animal;
+  onAbrir: () => void;
   onInteresse: () => void;
   onVerVideo: () => void;
   layout?: CatalogoLayout;

@@ -6,40 +6,6 @@ const PAGE_TOKEN = Deno.env.get("META_PAGE_ACCESS_TOKEN");
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-/** Configuração de um formulário de Lead Ads, como salva em `meta_formularios`. */
-type FormularioConfig = {
-  funil_id: string | null;
-  etapa: string | null;
-  responsavel_id: string | null;
-  form_nome: string | null;
-  mapa_campos: Record<string, string> | null;
-};
-
-/** Um campo respondido no formulário, no formato da Graph API. */
-type CampoLead = { name: string; values: string[] };
-
-/** Payload `value` de um evento `leadgen` do webhook da Meta. */
-export type EventoLeadgen = { leadgen_id: string; form_id?: string };
-
-/** Colunas de `leads` preenchidas a partir de um lead da Meta. */
-type LeadPayload = {
-  nome: string;
-  telefone: string | null;
-  cidade: string | null;
-  estado: string | null;
-  origem: string;
-  tipo_cliente: string;
-  observacoes: string | null;
-  funil_id: string | null;
-  etapa: string | null;
-  responsavel_id: string | null;
-  meta_lead_id: string;
-  meta_form_id: string | null;
-  meta_form_nome: string | null;
-  respostas_formulario: { pergunta: string; resposta: string }[];
-  campos_extras: Record<string, string>;
-};
-
 async function buscarFunilPadrao(): Promise<{ id: string; etapa: string } | null> {
   const { data } = await supabase
     .from("funis").select("id, etapas").eq("ativo", true).order("ordem").limit(1).single();
@@ -59,7 +25,7 @@ async function buscarDetalhesLeadMeta(leadgen_id: string) {
   return await resp.json();
 }
 
-function extrairCampoPadrao(field_data: CampoLead[], nomes: string[]) {
+function extrairCampoPadrao(field_data: { name: string; values: string[] }[], nomes: string[]) {
   for (const nome of nomes) {
     const f = field_data.find((x) => x.name?.toLowerCase().includes(nome));
     if (f && f.values?.[0]) return f.values[0];
@@ -67,22 +33,25 @@ function extrairCampoPadrao(field_data: CampoLead[], nomes: string[]) {
   return null;
 }
 
-export async function processarLeadgen(value: EventoLeadgen): Promise<{ status: string; lead_id: string | null; erro: string | null }> {
+export async function processarLeadgen(value: {
+  leadgen_id: string;
+  form_id?: string;
+}): Promise<{ status: string; lead_id: string | null; erro: string | null }> {
   const leadgen_id = value.leadgen_id;
   const form_id = value.form_id ?? null;
   if (!leadgen_id) return { status: "erro", lead_id: null, erro: "leadgen_id ausente" };
 
-  let formCfg: FormularioConfig | null = null;
+  let formCfg: any = null;
   if (form_id) {
     const { data } = await supabase
       .from("meta_formularios").select("*").eq("form_id", form_id).maybeSingle();
-    formCfg = data as FormularioConfig | null;
+    formCfg = data;
   }
 
   const detalhes = await buscarDetalhesLeadMeta(leadgen_id);
-  const field_data: CampoLead[] = detalhes?.field_data ?? [];
+  const field_data: { name: string; values: string[] }[] = detalhes?.field_data ?? [];
 
-  const mapa: Record<string, string> = formCfg?.mapa_campos ?? {};
+  const mapa: Record<string, string> = (formCfg?.mapa_campos ?? {}) as any;
   const camposMapeados: Record<string, string | null> = {};
   const campos_extras: Record<string, string> = {};
 
@@ -122,7 +91,7 @@ export async function processarLeadgen(value: EventoLeadgen): Promise<{ status: 
     etapa = etapa ?? fp?.etapa ?? null;
   }
 
-  const lead_payload: LeadPayload = {
+  const lead_payload: any = {
     nome, telefone, cidade, estado,
     origem: "Meta Ads",
     tipo_cliente: "Lead",
@@ -151,7 +120,7 @@ export async function processarLeadgen(value: EventoLeadgen): Promise<{ status: 
   };
 }
 
-export async function logarEvento(v: EventoLeadgen, result: { status: string; lead_id: string | null; erro: string | null }) {
+export async function logarEvento(v: any, result: { status: string; lead_id: string | null; erro: string | null }) {
   await supabase.from("meta_eventos_log").insert({
     leadgen_id: v.leadgen_id,
     form_id: v.form_id ?? null,

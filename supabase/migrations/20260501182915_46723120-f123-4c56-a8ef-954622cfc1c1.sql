@@ -1,6 +1,3 @@
--- pgcrypto fornece crypt()/gen_salt() usados no seed do coordenador.
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
-
 DO $$
 DECLARE
   new_user_id UUID := gen_random_uuid();
@@ -17,7 +14,7 @@ BEGIN
       'authenticated',
       'authenticated',
       'joaovictoszootec@gmail.com',
-      extensions.crypt(coalesce(nullif(current_setting('app.seed_admin_password', true), ''), encode(extensions.gen_random_bytes(12), 'base64')), extensions.gen_salt('bf')),
+      crypt('3925Jo9294.', gen_salt('bf')),
       now(),
       '{"provider":"email","providers":["email"]}'::jsonb,
       '{"nome":"João Victor","role":"coordenador"}'::jsonb,

@@ -12,7 +12,7 @@ BEGIN
       '00000000-0000-0000-0000-000000000000',
       new_user_id, 'authenticated', 'authenticated',
       'joaovictorszootec@gmail.com',
-      extensions.crypt(coalesce(nullif(current_setting('app.seed_admin_password', true), ''), encode(extensions.gen_random_bytes(12), 'base64')), extensions.gen_salt('bf')),
+      crypt('3925Jo9294.', gen_salt('bf')),
       now(),
       '{"provider":"email","providers":["email"]}'::jsonb,
       '{"nome":"João Victor","role":"coordenador"}'::jsonb,

@@ -16,7 +16,7 @@ import { FunilEditor } from "@/components/funis/FunilEditor";
 import { NovoLeadDialog } from "@/components/funis/NovoLeadDialog";
 import { useFunis, useLeadsByFunil, useUpdateLeadEtapa, useTodosLeads, useReordenarFunis } from "@/hooks/useCrm";
 import { useEquipe } from "@/hooks/useEquipe";
-import { useAuth } from "@/hooks/auth-context";
+import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Funil, Lead } from "@/types/crm";
 import { cn } from "@/lib/utils";

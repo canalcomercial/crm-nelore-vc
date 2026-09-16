@@ -125,14 +125,9 @@ export function LayoutEditor() {
   const [ready, setReady] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Só semeia o editor quando muda o registro carregado. Reagir a toda mudança
-  // de `config` faria um refetch em background apagar edições não salvas.
-  const idCarregado = useRef<string | null>(null);
   useEffect(() => {
-    if (!config || idCarregado.current === config.id) return;
-    idCarregado.current = config.id;
-    if (config.layout) setLayout({ ...LAYOUT_PADRAO, ...(config.layout as CatalogoLayout) });
-  }, [config]);
+    if (config?.layout) setLayout({ ...LAYOUT_PADRAO, ...(config.layout as CatalogoLayout) });
+  }, [config?.id]);
 
   useEffect(() => {
     function onMsg(e: MessageEvent) {
@@ -224,11 +219,11 @@ export function LayoutEditor() {
         <div>
           <h3 className="font-semibold text-sm mb-3">Textos</h3>
           <Label className="text-[11px]">Rótulo acima do título (topo)</Label>
-          <Input value={layout.hero_kicker ?? ""} onChange={(e) => upd("hero_kicker", e.target.value)} placeholder="Catálogo" />
+          <Input value={layout.hero_kicker ?? ""} onChange={(e) => upd("hero_kicker" as any, e.target.value as any)} placeholder="Catálogo" />
           <Label className="text-[11px] mt-2 block">Título do topo</Label>
-          <Input value={layout.hero_titulo ?? ""} onChange={(e) => upd("hero_titulo", e.target.value)} placeholder="Genética Nelore de Elite" />
+          <Input value={layout.hero_titulo ?? ""} onChange={(e) => upd("hero_titulo" as any, e.target.value as any)} placeholder="Genética Nelore de Elite" />
           <Label className="text-[11px] mt-2 block">Subtítulo do topo</Label>
-          <Textarea rows={2} value={layout.hero_subtitulo ?? ""} onChange={(e) => upd("hero_subtitulo", e.target.value)} placeholder="Animais selecionados para o melhoramento do seu rebanho." />
+          <Textarea rows={2} value={layout.hero_subtitulo ?? ""} onChange={(e) => upd("hero_subtitulo" as any, e.target.value as any)} placeholder="Animais selecionados para o melhoramento do seu rebanho." />
           <p className="text-[11px] text-muted-foreground mt-1">Exibido quando nenhum evento ativo estiver selecionado.</p>
           <Label className="text-[11px] mt-2 block">Contador (singular)</Label>
 
@@ -255,7 +250,7 @@ export function LayoutEditor() {
 
         <div className="flex gap-2 pt-2 border-t sticky bottom-0 bg-surface -mx-4 px-4 pb-1">
           <Button variant="outline" size="sm" onClick={() => setLayout(LAYOUT_PADRAO)}>Restaurar padrão</Button>
-          <Button size="sm" className="flex-1" onClick={() => salvar.mutate({ layout })} disabled={salvar.isPending}>
+          <Button size="sm" className="flex-1" onClick={() => salvar.mutate({ layout } as any)} disabled={salvar.isPending}>
             {salvar.isPending ? "Salvando..." : "Salvar layout"}
           </Button>
         </div>

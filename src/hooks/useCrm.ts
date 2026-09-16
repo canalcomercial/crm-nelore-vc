@@ -513,6 +513,11 @@ export function useUpdateLeadDados() {
       tipo_cliente?: string | null;
       origem?: string | null;
       interesse?: string | null;
+      endereco_propriedade?: string | null;
+      inscricao_estadual?: string | null;
+      nirf?: string | null;
+      cib?: string | null;
+      codigo_propriedade?: string | null;
     }) => {
       const { id, ...campos } = payload;
       if (Object.keys(campos).length === 0) return;

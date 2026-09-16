@@ -36,7 +36,7 @@ function texto(v: unknown): string | null {
 export function numero(v: unknown): number | null {
   if (v == null || v === "") return null;
   if (typeof v === "number") return Number.isFinite(v) ? v : null;
-  let s = String(v).trim().replace(/[^\d,.-]/g, "");
+  let s = String(v).trim().replace(/[^\d,.\-]/g, "");
   if (!s) return null;
   const temVirgula = s.includes(",");
   const temPonto = s.includes(".");

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -61,42 +61,31 @@ export function EmitirContratoDialog({ trigger, open: openProp, onOpenChange, le
   const [tipo, setTipo] = useState<ContratoTipo>('bovinos');
   const [extras, setExtras] = useState<Record<string, string>>({});
 
-  // Semeia o formulário a partir da última venda ao abrir. A chave impede que
-  // um refetch de `ultimaVenda` sobrescreva o que o usuário já digitou.
-  const formSemeado = useRef<string | null>(null);
   useEffect(() => {
-    if (!open) {
-      formSemeado.current = null;
-      return;
+    if (open) {
+      setForm({
+        categoria: ultimaVenda?.categoria ?? CATEGORIAS_VENDA[0],
+        produto: ultimaVenda?.produto ?? "",
+        quantidade: ultimaVenda?.quantidade ?? 1,
+        valor_total: ultimaVenda?.valor_total ? String(ultimaVenda.valor_total) : "",
+        forma_pagamento: ultimaVenda?.forma_pagamento ?? "À vista",
+        tipo_parcelamento: ultimaVenda?.tipo_parcelamento ?? "À vista",
+        qtd_parcelas: ultimaVenda?.qtd_parcelas ? String(ultimaVenda.qtd_parcelas) : "",
+        parcelamento_descricao: ultimaVenda?.parcelamento_descricao ?? "",
+        observacoes: ultimaVenda?.observacoes ?? "",
+        data_venda: new Date(),
+      });
+      const t = tipoDaCategoria(ultimaVenda?.categoria ?? CATEGORIAS_VENDA[0]);
+      setTipo(t);
+      const src = (ultimaVenda?.campos_extras ?? {}) as Record<string, unknown>;
+      const next: Record<string, string> = {};
+      for (const f of CAMPOS_EXTRAS_POR_TIPO[t]) {
+        const v = src[f.key];
+        next[f.key] = v === undefined || v === null ? '' : String(v);
+      }
+      setExtras(next);
     }
-    const chave = `${lead.id}|${ultimaVenda?.id ?? "nova"}`;
-    if (formSemeado.current === chave) return;
-    formSemeado.current = chave;
-
-    setForm({
-      categoria: ultimaVenda?.categoria ?? CATEGORIAS_VENDA[0],
-      produto: ultimaVenda?.produto ?? "",
-      quantidade: ultimaVenda?.quantidade ?? 1,
-      valor_total: ultimaVenda?.valor_total ? String(ultimaVenda.valor_total) : "",
-      forma_pagamento: ultimaVenda?.forma_pagamento ?? "À vista",
-      tipo_parcelamento: ultimaVenda?.tipo_parcelamento ?? "À vista",
-      qtd_parcelas: ultimaVenda?.qtd_parcelas ? String(ultimaVenda.qtd_parcelas) : "",
-      parcelamento_descricao: ultimaVenda?.parcelamento_descricao ?? "",
-      observacoes: ultimaVenda?.observacoes ?? "",
-      data_venda: new Date(),
-    });
-
-    const t = tipoDaCategoria(ultimaVenda?.categoria ?? CATEGORIAS_VENDA[0]);
-    setTipo(t);
-
-    const src = (ultimaVenda?.campos_extras ?? {}) as Record<string, unknown>;
-    const next: Record<string, string> = {};
-    for (const f of CAMPOS_EXTRAS_POR_TIPO[t]) {
-      const v = src[f.key];
-      next[f.key] = v === undefined || v === null ? '' : String(v);
-    }
-    setExtras(next);
-  }, [open, lead, ultimaVenda]);
+  }, [open, lead.id, ultimaVenda?.id]);
 
   useEffect(() => {
     // Ao trocar tipo, mantém valores existentes e adiciona chaves faltantes vazias

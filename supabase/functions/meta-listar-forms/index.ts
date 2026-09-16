@@ -13,12 +13,6 @@ const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const PAGE_TOKEN = Deno.env.get("META_PAGE_ACCESS_TOKEN");
 
-/** Formulário de Lead Ads como devolvido por /leadgen_forms na Graph API. */
-type LeadgenForm = { id: string; name: string; status: string; created_time: string };
-
-/** Página do Facebook como devolvida por /me/accounts. */
-type PaginaMeta = { id: string; name: string; access_token?: string };
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -69,8 +63,8 @@ Deno.serve(async (req) => {
     const pages = await pagesResp.json();
 
     // 2) Para cada página, listar leadgen_forms
-    const resultado: Array<{ page_id: string; page_nome: string; forms: LeadgenForm[] }> = [];
-    for (const page of (pages.data ?? []) as PaginaMeta[]) {
+    const resultado: Array<{ page_id: string; page_nome: string; forms: any[] }> = [];
+    for (const page of pages.data ?? []) {
       const formsResp = await fetch(
         `https://graph.facebook.com/v21.0/${page.id}/leadgen_forms?fields=id,name,status,created_time&access_token=${page.access_token ?? PAGE_TOKEN}`,
       );
