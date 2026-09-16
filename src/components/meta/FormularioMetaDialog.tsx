@@ -46,7 +46,7 @@ export function FormularioMetaDialog({ open, onOpenChange, formulario }: Props) 
     if (!form.form_id) return;
     salvar.mutate(
       {
-        id: (form as any).id,
+        id: form.id,
         form_id: form.form_id,
         form_nome: form.form_nome ?? null,
         page_id: form.page_id ?? null,
@@ -54,9 +54,9 @@ export function FormularioMetaDialog({ open, onOpenChange, formulario }: Props) 
         funil_id: form.funil_id ?? null,
         etapa: form.etapa ?? null,
         responsavel_id: form.responsavel_id ?? null,
-        mapa_campos: (form.mapa_campos ?? {}) as any,
+        mapa_campos: form.mapa_campos ?? {},
         ativo: form.ativo ?? true,
-      } as any,
+      },
       { onSuccess: () => onOpenChange(false) },
     );
   };
@@ -134,7 +134,7 @@ export function FormularioMetaDialog({ open, onOpenChange, formulario }: Props) 
             <Label className="text-xs mb-2 block">Mapa de campos</Label>
             <MapaCamposEditor
               value={(form.mapa_campos ?? {}) as Record<string, string>}
-              onChange={(mapa) => setForm({ ...form, mapa_campos: mapa as any })}
+              onChange={(mapa) => setForm({ ...form, mapa_campos: mapa })}
               formId={form.form_id}
             />
           </div>

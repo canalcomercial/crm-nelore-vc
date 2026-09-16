@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { mensagemDeErro } from "@/lib/erros";
 import type { Animal } from "@/hooks/useCatalogo";
 
 export function PropostaDialog({
@@ -54,8 +55,8 @@ export function PropostaDialog({
       onSucesso?.({ nome, valor_ofertado: valorNum, parcelas: parcelasNum, mensagem });
       onOpenChange(false);
       setNome(""); setTelefone(""); setEmail(""); setValor(""); setParcelas(""); setMensagem("");
-    } catch (err: any) {
-      toast.error(err.message ?? "Não foi possível enviar a proposta");
+    } catch (err) {
+      toast.error(mensagemDeErro(err, "Não foi possível enviar a proposta"));
     } finally {
       setEnviando(false);
     }

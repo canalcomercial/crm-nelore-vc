@@ -58,10 +58,14 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
     }
   }, [open, contratosExistentes]);
 
-  // Pré-carrega campos extras a partir da venda ao abrir / mudar de tipo
+  // Pré-carrega campos extras a partir da venda ao abrir / mudar de tipo.
+  // A venda é lida por ref de propósito: semear a cada mudança do objeto faria
+  // um refetch em background apagar o que o usuário já digitou.
+  const vendaRef = useRef(venda);
+  vendaRef.current = venda;
   useEffect(() => {
     if (!open) return;
-    const src = (venda.campos_extras ?? {}) as Record<string, unknown>;
+    const src = (vendaRef.current.campos_extras ?? {}) as Record<string, unknown>;
     const next: Record<string, string> = {};
     for (const f of CAMPOS_EXTRAS_POR_TIPO[tipo]) {
       const v = src[f.key];

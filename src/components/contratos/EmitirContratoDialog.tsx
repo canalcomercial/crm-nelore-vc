@@ -1,4 +1,4 @@
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -61,23 +61,29 @@ export function EmitirContratoDialog({ trigger, open: openProp, onOpenChange, le
   const [tipo, setTipo] = useState<ContratoTipo>('bovinos');
   const [extras, setExtras] = useState<Record<string, string>>({});
 
+  // A última venda é lida por ref: o formulário é semeado só ao abrir ou quando
+  // muda a venda de origem. Reagir a cada campo faria um refetch em background
+  // apagar o que o usuário já digitou.
+  const vendaRef = useRef(ultimaVenda);
+  vendaRef.current = ultimaVenda;
   useEffect(() => {
     if (open) {
+      const uv = vendaRef.current;
       setForm({
-        categoria: ultimaVenda?.categoria ?? CATEGORIAS_VENDA[0],
-        produto: ultimaVenda?.produto ?? "",
-        quantidade: ultimaVenda?.quantidade ?? 1,
-        valor_total: ultimaVenda?.valor_total ? String(ultimaVenda.valor_total) : "",
-        forma_pagamento: ultimaVenda?.forma_pagamento ?? "À vista",
-        tipo_parcelamento: ultimaVenda?.tipo_parcelamento ?? "À vista",
-        qtd_parcelas: ultimaVenda?.qtd_parcelas ? String(ultimaVenda.qtd_parcelas) : "",
-        parcelamento_descricao: ultimaVenda?.parcelamento_descricao ?? "",
-        observacoes: ultimaVenda?.observacoes ?? "",
+        categoria: uv?.categoria ?? CATEGORIAS_VENDA[0],
+        produto: uv?.produto ?? "",
+        quantidade: uv?.quantidade ?? 1,
+        valor_total: uv?.valor_total ? String(uv.valor_total) : "",
+        forma_pagamento: uv?.forma_pagamento ?? "À vista",
+        tipo_parcelamento: uv?.tipo_parcelamento ?? "À vista",
+        qtd_parcelas: uv?.qtd_parcelas ? String(uv.qtd_parcelas) : "",
+        parcelamento_descricao: uv?.parcelamento_descricao ?? "",
+        observacoes: uv?.observacoes ?? "",
         data_venda: new Date(),
       });
-      const t = tipoDaCategoria(ultimaVenda?.categoria ?? CATEGORIAS_VENDA[0]);
+      const t = tipoDaCategoria(uv?.categoria ?? CATEGORIAS_VENDA[0]);
       setTipo(t);
-      const src = (ultimaVenda?.campos_extras ?? {}) as Record<string, unknown>;
+      const src = (uv?.campos_extras ?? {}) as Record<string, unknown>;
       const next: Record<string, string> = {};
       for (const f of CAMPOS_EXTRAS_POR_TIPO[t]) {
         const v = src[f.key];

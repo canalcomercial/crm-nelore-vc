@@ -24,10 +24,19 @@ export function TemplateEditor() {
   const [modo, setModo] = useState<'edit' | 'preview'>('edit');
   const taRef = useRef<HTMLTextAreaElement>(null);
 
+  // Semeia o editor só quando muda o template carregado. Reagir a toda mudança
+  // de `tpl` faria um refetch em background apagar edições não salvas.
+  const idCarregado = useRef<string | null>(null);
   useEffect(() => {
-    if (tpl) { setHtml(tpl.conteudo_html); setNome(tpl.nome); }
-    else { setHtml(''); setNome(''); }
-  }, [tpl?.id]);
+    if (tpl) {
+      if (idCarregado.current === tpl.id) return;
+      idCarregado.current = tpl.id;
+      setHtml(tpl.conteudo_html); setNome(tpl.nome);
+    } else {
+      idCarregado.current = null;
+      setHtml(''); setNome('');
+    }
+  }, [tpl]);
 
   const variaveis = useMemo(
     () => [...VARIAVEIS_COMUNS, ...VARIAVEIS_POR_TIPO[tipo]],

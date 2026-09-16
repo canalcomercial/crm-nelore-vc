@@ -18,7 +18,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth-context";
 import { VendaDialog } from "@/components/vendas/VendaDialog";
 import { EmitirContratoDialog } from "@/components/contratos/EmitirContratoDialog";
 import { cn } from "@/lib/utils";
@@ -312,6 +312,9 @@ function LeadPanelInner({ lead, funil, onClose }: InnerProps) {
 
                 {/* Informações comerciais */}
                 <LeadCamposExtras lead={lead} />
+
+                {/* Atributos personalizados (catálogo dinâmico) */}
+                <AtributosPersonalizados lead={lead} />
 
                 {/* Documentos */}
                 <Section title="Documentos">

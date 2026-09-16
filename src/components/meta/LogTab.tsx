@@ -1,4 +1,4 @@
-import { RefreshCw, RotateCcw, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { RefreshCw, RotateCcw, CheckCircle2, XCircle, AlertCircle, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const STATUS: Record<string, { label: string; className: string; Icon: any }> = {
+const STATUS: Record<string, { label: string; className: string; Icon: LucideIcon }> = {
   processado: { label: "Processado", className: "bg-success/15 text-success", Icon: CheckCircle2 },
   ignorado: { label: "Ignorado (form não cadastrado)", className: "bg-warning/15 text-warning", Icon: AlertCircle },
   erro: { label: "Erro", className: "bg-destructive/15 text-destructive", Icon: XCircle },

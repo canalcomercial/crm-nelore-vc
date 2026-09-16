@@ -8,9 +8,8 @@ import { Copy, Check, ChevronRight, ChevronLeft, Loader2, CheckCircle2, XCircle 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMetaConfig, useSalvarMetaConfig } from "@/hooks/useMeta";
+import { META_WEBHOOK_URL as WEBHOOK_URL } from "@/lib/public-urls";
 
-const PROJECT_REF = "jyhxcqlsinxodfcdrlgx";
-const WEBHOOK_URL = `https://${PROJECT_REF}.supabase.co/functions/v1/meta-lead-webhook`;
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -109,7 +108,7 @@ export function ConexaoWizard() {
             <Input value={verifyHint} onChange={(e) => setVerifyHint(e.target.value)} placeholder="Últimos caracteres (dica)" className="font-mono text-xs" />
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Guardamos apenas uma dica (últimos caracteres). O valor completo fica na secret <code>META_VERIFY_TOKEN</code> — peça ao Lovable para salvar via "add secret" se ainda não está configurado.
+            Guardamos apenas uma dica (últimos caracteres). O valor completo fica na secret <code>META_VERIFY_TOKEN</code> — cadastre em Supabase → Edge Functions → Secrets se ainda não estiver configurado.
           </p>
           <div className="flex justify-between">
             <Button variant="ghost" onClick={() => setStep(1)} className="gap-1.5"><ChevronLeft className="h-4 w-4" /> Voltar</Button>

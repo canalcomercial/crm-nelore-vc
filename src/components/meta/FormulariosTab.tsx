@@ -63,7 +63,7 @@ export function FormulariosTab() {
                     <Button variant="ghost" size="sm" className="h-6 text-[10px]"
                       onClick={() => {
                         setEditing({
-                          id: "" as any,
+                          id: "",
                           form_id: f.id,
                           form_nome: f.name,
                           page_id: p.page_id,
@@ -129,7 +129,7 @@ export function FormulariosTab() {
         </Table>
       </div>
 
-      <FormularioMetaDialog open={open} onOpenChange={setOpen} formulario={editing?.id ? editing : editing as any} />
+      <FormularioMetaDialog open={open} onOpenChange={setOpen} formulario={editing} />
 
       <AlertDialog open={!!confirmDelete} onOpenChange={(v) => !v && setConfirmDelete(null)}>
         <AlertDialogContent>

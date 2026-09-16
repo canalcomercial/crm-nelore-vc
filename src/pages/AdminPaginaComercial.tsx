@@ -226,7 +226,7 @@ export default function AdminPaginaComercial() {
           <Card className="p-5">
             <div className="flex items-center gap-3">
               <Switch checked={rascunho.ativo} onCheckedChange={(v) => update({ ativo: v })} />
-              <span className="text-sm">Página pública ativa em <a href={PAGINA_COMERCIAL_URL} target="_blank" rel="noreferrer" className="underline"><code>crmvc.lovable.app/nelore-vc</code></a></span>
+              <span className="text-sm">Página pública ativa em <a href={PAGINA_COMERCIAL_URL} target="_blank" rel="noreferrer" className="underline"><code>{PAGINA_COMERCIAL_URL.replace(/^https?:\/\//, "")}</code></a></span>
             </div>
           </Card>
         </TabsContent>

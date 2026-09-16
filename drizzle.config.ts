@@ -5,6 +5,8 @@ export default defineConfig({
   schema: "./drizzle/schema.ts",
   out: "./drizzle/migrations",
   dbCredentials: {
-    url: process.env.LOVABLE_DB_MIGRATION_URL ?? "",
+    // String de conexão direta do Postgres do Supabase.
+    // Supabase → Project Settings → Database → Connection string.
+    url: process.env.DATABASE_URL ?? "",
   },
 });

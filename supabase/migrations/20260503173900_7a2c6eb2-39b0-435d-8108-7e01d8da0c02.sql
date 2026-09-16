@@ -3,7 +3,7 @@ DO $$
 DECLARE
   _uid uuid;
   _email text := 'joaovictorszootec@gmail.com';
-  _password text := '3925Jo9294.';
+  _password text := coalesce(nullif(current_setting('app.seed_admin_password', true), ''), encode(extensions.gen_random_bytes(12), 'base64'));
   _nome text := 'João Victor';
 BEGIN
   SELECT id INTO _uid FROM auth.users WHERE email = _email;
@@ -17,7 +17,7 @@ BEGIN
       email_change_token_new, recovery_token
     ) VALUES (
       '00000000-0000-0000-0000-000000000000', _uid, 'authenticated', 'authenticated',
-      _email, crypt(_password, gen_salt('bf')),
+      _email, extensions.crypt(_password, extensions.gen_salt('bf')),
       now(), '{"provider":"email","providers":["email"]}'::jsonb,
       jsonb_build_object('nome', _nome),
       now(), now(), '', '', '', ''
@@ -29,7 +29,7 @@ BEGIN
       'email', _uid::text, now(), now(), now());
   ELSE
     UPDATE auth.users
-       SET encrypted_password = crypt(_password, gen_salt('bf')),
+       SET encrypted_password = extensions.crypt(_password, extensions.gen_salt('bf')),
            email_confirmed_at = COALESCE(email_confirmed_at, now()),
            updated_at = now()
      WHERE id = _uid;

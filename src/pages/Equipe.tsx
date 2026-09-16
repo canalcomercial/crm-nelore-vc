@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth-context";
 import { useEquipe, useCriarMembro, useAtualizarRole, useToggleAtivo, useExcluirMembro, type MembroEquipe } from "@/hooks/useEquipe";
 import type { AppRole } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";

@@ -114,10 +114,6 @@ function Cabecalho({ animal, dados }: { animal: Animal; dados: EmbriaoDados }) {
 
 /* ------------------------------------------------------------------ */
 
-function nomes(p: EmbriaoPessoa[]) {
-  return p.map((x) => x.nome).join(" · ");
-}
-
 function Midia({ animal, dados, onProposta }: { animal: Animal; dados: EmbriaoDados; onProposta?: () => void }) {
   const [tocando, setTocando] = useState(false);
   const linkVideo = dados.link_video ?? animal.link_video ?? null;

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Users } from "lucide-react";
+import type { CSSPropertiesComVars } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimalCard } from "@/components/catalogo/AnimalCard";
-import { AnimalModal } from "@/components/catalogo/AnimalModal";
 import { useAnimais, useConfiguracao, useEventosAtivos, ordenarPorLote, LAYOUT_PADRAO, type Animal, type CatalogoLayout } from "@/hooks/useCatalogo";
 import { abrirWhatsApp, msgInteresseAnimal } from "@/lib/whatsapp";
 import { toast } from "sonner";
@@ -23,7 +23,6 @@ export default function CatalogoPage() {
   const eventosEmbrioes = useMemo(() => todosEventosAtivos.filter((e) => e.tipo === "embrioes"), [todosEventosAtivos]);
   const { data: config } = useConfiguracao();
   const [ordem, setOrdem] = useState<OrdemKey>("padrao");
-  const [modal, setModal] = useState<Animal | null>(null);
   const [params] = useSearchParams();
   // A landing manda ?categoria=Touro para abrir o catálogo já filtrado.
   const [categoria, setCategoria] = useState<string>(params.get("categoria") ?? "Todas");
@@ -119,10 +118,10 @@ export default function CatalogoPage() {
       className="min-h-screen text-neutral-900"
       style={{
         // Aplica temas via CSS vars locais para prévia
-        ["--catalog-primary" as any]: layout.cor_primary,
-        ["--catalog-bg" as any]: layout.cor_bg,
+        "--catalog-primary": layout.cor_primary,
+        "--catalog-bg": layout.cor_bg,
         backgroundColor: `hsl(${layout.cor_bg})`,
-      }}
+      } as CSSPropertiesComVars}
     >
       <header className="bg-white border-b border-black/5 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
@@ -245,7 +244,7 @@ export default function CatalogoPage() {
             <div className="catalog-grid">
               {destaquesCarrossel.map((a) => (
                 <div key={a.id} className="catalog-item">
-                  <AnimalCard animal={a} layout={layout} onAbrir={() => setModal(a)} onInteresse={() => abrirInteresse(a)} onVerVideo={() => abrirVideo(a)} />
+                  <AnimalCard animal={a} layout={layout} onInteresse={() => abrirInteresse(a)} onVerVideo={() => abrirVideo(a)} />
                 </div>
               ))}
             </div>
@@ -254,7 +253,7 @@ export default function CatalogoPage() {
               <div className="mt-6">
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
                   {restantesVisiveis.map((a) => (
-                    <AnimalCard key={a.id} animal={a} layout={layout} onAbrir={() => setModal(a)} onInteresse={() => abrirInteresse(a)} onVerVideo={() => abrirVideo(a)} />
+                    <AnimalCard key={a.id} animal={a} layout={layout} onInteresse={() => abrirInteresse(a)} onVerVideo={() => abrirVideo(a)} />
                   ))}
                 </div>
                 {restantesVisiveis.length < restantes.length && (
@@ -337,7 +336,6 @@ export default function CatalogoPage() {
         </div>
       </footer>
 
-      <AnimalModal animal={modal} open={!!modal} onOpenChange={(v) => !v && setModal(null)} onInteresse={abrirInteresse} />
     </div>
   );
 }

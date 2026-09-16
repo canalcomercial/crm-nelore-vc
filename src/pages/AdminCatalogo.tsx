@@ -217,7 +217,7 @@ function EventoTab() {
       await atualizarAnimais.mutateAsync({ eventoId: form.id, animalIds: Array.from(selecionados) });
     } else {
       // Insere e recupera o id
-      const { data, error } = await supabase.from("eventos").insert(form as any).select("id").single();
+      const { data, error } = await supabase.from("eventos").insert(form as TablesInsert<"eventos">).select("id").single();
       if (error) { toast.error(error.message); return; }
       const novoId = data!.id as string;
       if (selecionados.size > 0) {
