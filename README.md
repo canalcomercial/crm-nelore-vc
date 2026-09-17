@@ -90,6 +90,30 @@ Em CI (sem navegador), use um API token no lugar do `login`:
 CLOUDFLARE_API_TOKEN=... npx wrangler deploy
 ```
 
+#### Workers Builds (deploy automático a cada push)
+
+Conectando o repositório em Workers & Pages → Create → Connect to Git, a
+Cloudflare builda e publica sozinha. Três campos precisam estar certos, e o
+padrão do painel erra nos três:
+
+| Campo | Valor correto | O que acontece se ficar errado |
+| --- | --- | --- |
+| Comando da build | `npm run build` | Vazio, `dist/` nunca é criado e o wrangler falha com *"The directory specified by the `assets.directory` field does not exist"* |
+| Comando de implantação | `npx wrangler deploy` | `wrangler versions upload` só sobe uma versão **sem ativar** — o site não entra no ar e o Custom Domain não é criado |
+| Variáveis de ambiente | as `VITE_*` da tabela de configuração | **O build passa mesmo assim** e o deploy é reportado como sucesso, mas o app aborta no navegador com "Supabase não configurado" |
+
+O terceiro é o mais traiçoeiro: as `VITE_*` são lidas em tempo de build, e a
+ausência delas não quebra o `vite build` — quebra só quando a página abre. Um
+build verde não garante um site funcionando.
+
+Alternativa em um campo só: deixe o comando de build vazio e ponha
+`npm run deploy` como comando de implantação — o script já faz
+`npm run build && wrangler deploy`.
+
+Se o deploy passar mas o domínio continuar sem responder, verifique as
+permissões do token gerado pelo Workers Builds: criar Custom Domain exige
+`Zone:DNS:Edit` na zona, além de `Workers Scripts:Edit`.
+
 ### Outros hosts
 
 | Host | Como publicar |
