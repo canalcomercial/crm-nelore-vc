@@ -1,4 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// Estes testes validam geração de documentos, sem acessar o banco de produção.
+vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
 import { montarVariaveis, renderTemplate, calcularParcelas } from '@/lib/contrato-render';
 import { TEMPLATE_NELORE_VC_HTML } from '@/lib/templates/contrato-nelore-vc';
 import { montarNotaTransporteHtml } from '@/lib/nota-transporte';
@@ -50,5 +53,18 @@ describe('Modelo Nelore VC', () => {
     expect(html).toContain('7.777.777-7');
     expect(html).toContain('TO-0001');
     expect(html).toContain('29.123.456-7');
+  });
+});
+
+describe('Modelo padrão por tipo', () => {
+  it('embriões e sêmen usam o mesmo modelo, sem variáveis pendentes', async () => {
+    const { templatePadraoNeloreVC } = await import('@/lib/templates/contrato-nelore-vc');
+    for (const tipo of ['embrioes', 'semen'] as const) {
+      const vars = montarVariaveis(venda, lead, contratante, 1234, tipo);
+      const html = renderTemplate(templatePadraoNeloreVC(tipo).html, vars);
+      expect(html).not.toMatch(/\{\{\w+\}\}/);
+      expect(html).toContain('NOTA PROMISSÓRIA RURAL ÚNICA');
+      expect(html).toContain('30ª parc.');
+    }
   });
 });

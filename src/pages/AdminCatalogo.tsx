@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Topbar } from "@/components/layout/Topbar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ import { LayoutEditor } from "@/components/catalogo/admin/LayoutEditor";
 import { FaqEditor } from "@/components/catalogo/admin/FaqEditor";
 import { generateCoverForVideo } from "@/lib/frame-extraction";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -76,7 +77,35 @@ function AnimaisTab() {
   const [importarEmbrioes, setImportarEmbrioes] = useState(false);
   const [gerando, setGerando] = useState(false);
   const [progresso, setProgresso] = useState<{ atual: number; total: number } | null>(null);
+  // Seleção em massa: ativada ao manter pressionado o botão de excluir de qualquer linha.
+  const [selecao, setSelecao] = useState<Set<string> | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
+  const timer = useRef<number | null>(null);
+  const longPress = useRef<{ id: string; disparou: boolean } | null>(null);
   const qc = useQueryClient();
+
+  const iniciarSelecao = (id: string) => {
+    setSelecao((prev) => (prev ? prev : new Set([id])));
+  };
+  const alternar = (id: string) =>
+    setSelecao((prev) => {
+      const next = new Set(prev ?? []);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const excluirSelecionados = async () => {
+    const ids = Array.from(selecao ?? []);
+    if (!ids.length) return;
+    if (!confirm(`Excluir ${ids.length} registro(s) definitivamente?`)) return;
+    setExcluindo(true);
+    const { error } = await supabase.from("animais").delete().in("id", ids);
+    setExcluindo(false);
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ["animais"] });
+    toast.success(`${ids.length} registro(s) excluído(s)`);
+    setSelecao(null);
+  };
 
   const gerarCapas = async () => {
     const pendentes = animais.filter((a) => !a.foto_url && a.link_video);
@@ -139,10 +168,30 @@ function AnimaisTab() {
           <Button size="sm" onClick={() => setNovo(true)} className="gap-1.5"><Plus className="h-4 w-4" /> Novo animal</Button>
         </div>
       </div>
+
+      {selecao && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 p-2">
+          <span className="text-sm font-medium">{selecao.size} selecionado(s)</span>
+          <Button variant="outline" size="sm" onClick={() => setSelecao(new Set(animais.map((a) => a.id)))}>Selecionar tudo</Button>
+          <Button variant="outline" size="sm" onClick={() => setSelecao(new Set())}>Limpar</Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="gap-1.5"
+            disabled={excluindo || selecao.size === 0}
+            onClick={excluirSelecionados}
+          >
+            {excluindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Excluir em massa
+          </Button>
+          <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setSelecao(null)}>Cancelar</Button>
+        </div>
+      )}
+
       <div className="-mx-3 sm:mx-0 overflow-x-auto">
         <Table className="min-w-[560px]">
           <TableHeader>
             <TableRow>
+              {selecao && <TableHead className="w-8"></TableHead>}
               <TableHead className="w-14"></TableHead>
               <TableHead>Lote</TableHead>
               <TableHead>Nome</TableHead>
@@ -155,11 +204,16 @@ function AnimaisTab() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
             ) : animais.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum animal cadastrado.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum animal cadastrado.</TableCell></TableRow>
             ) : animais.map((a) => (
-              <TableRow key={a.id}>
+              <TableRow key={a.id} className={selecao?.has(a.id) ? "bg-muted/50" : undefined}>
+                {selecao && (
+                  <TableCell>
+                    <input type="checkbox" checked={selecao.has(a.id)} onChange={() => alternar(a.id)} aria-label={`Selecionar ${a.nome}`} />
+                  </TableCell>
+                )}
                 <TableCell>
                   {a.foto_url ? <img src={a.foto_url} alt="" className="h-10 w-10 rounded object-cover" /> : <div className="h-10 w-10 rounded bg-muted" />}
                 </TableCell>
@@ -172,11 +226,33 @@ function AnimaisTab() {
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" onClick={() => setEditar(a)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Excluir ${a.nome}?`)) excluir.mutate(a.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Mantenha pressionado para selecionar vários e excluir em massa"
+                      onPointerDown={() => {
+                        longPress.current = { id: a.id, disparou: false };
+                        timer.current = window.setTimeout(() => {
+                          if (longPress.current) longPress.current.disparou = true;
+                          iniciarSelecao(a.id);
+                        }, 500);
+                      }}
+                      onPointerUp={() => { if (timer.current) window.clearTimeout(timer.current); }}
+                      onPointerLeave={() => { if (timer.current) window.clearTimeout(timer.current); longPress.current = null; }}
+                      onClick={() => {
+                        if (longPress.current?.disparou) { longPress.current = null; return; }
+                        longPress.current = null;
+                        if (selecao) { alternar(a.id); return; }
+                        if (confirm(`Excluir ${a.nome}?`)) excluir.mutate(a.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
+
 
           </TableBody>
         </Table>

@@ -35,3 +35,6 @@ supabase/.branches
 
 # Testes
 coverage
+.wrangler/
+test-results/
+playwright-report/

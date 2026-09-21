@@ -39,6 +39,7 @@ export function FichaEmbriao({ animal, onProposta }: { animal: Animal; onPropost
         ))}
 
         <InformacoesPacote dados={d} animal={animal} />
+        <OutrasInformacoes dados={d} />
         <GarantiaECondicoes dados={d} />
 
         {animal.descricao_longa && animal.descricao_longa !== d.observacoes && (
@@ -497,6 +498,34 @@ function GarantiaECondicoes({ dados }: { dados: EmbriaoDados }) {
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+/** Tudo o que veio na planilha e não tem campo próprio — nada fica de fora. */
+function OutrasInformacoes({ dados }: { dados: EmbriaoDados }) {
+  const extras = (dados.extras ?? []).filter((e) => e.rotulo && e.valor);
+  if (!extras.length) return null;
+  const link = (v: string) => /^https?:\/\//i.test(v);
+  return (
+    <section data-testid="embriao-extras">
+      <h2 className="text-center text-[10px] sm:text-[11px] font-semibold tracking-[0.3em] uppercase mb-3" style={{ color: VC.cinzaTexto }}>
+        Outras informações
+      </h2>
+      <dl className="mx-auto grid max-w-4xl gap-2 sm:grid-cols-2">
+        {extras.map((e) => (
+          <div key={e.rotulo} className="rounded-xl px-3 py-2" style={{ background: VC.cardBg }}>
+            <dt className="text-[10px] font-bold tracking-[0.16em] uppercase" style={{ color: VC.cinzaTexto }}>{e.rotulo}</dt>
+            <dd className="text-sm font-semibold break-words" style={{ color: VC.preto }}>
+              {link(e.valor) ? (
+                <a href={e.valor} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline" style={{ color: VC.vermelho }}>
+                  Abrir link <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : e.valor}
+            </dd>
+          </div>
+        ))}
+      </dl>
     </section>
   );
 }

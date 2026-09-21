@@ -60,6 +60,8 @@ export type EmbriaoDados = {
   link_video_doadora?: string;
   link_acasalamentos?: string;
   fotos?: string[];
+  /** Todas as colunas da planilha sem campo próprio — nada é descartado na importação. */
+  extras?: { rotulo: string; valor: string }[];
   acasalamentos: EmbriaoAcasalamento[];
 };
 

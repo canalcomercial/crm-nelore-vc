@@ -116,20 +116,6 @@ export default function EmbrioesCatalogoPage({ evento, outrosEventos = [] }: { e
         </div>
       </section>
 
-      {faixas.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 pt-8" aria-label="Criatórios">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {faixas.map((f, i) => (
-              <button key={`${f.criatorio}-${i}`} type="button" onClick={() => setCriatorio(criatorio === f.criatorio ? "todos" : f.criatorio)}
-                className={`rounded-xl border bg-white px-4 py-3 text-left shadow-sm transition ${criatorio === f.criatorio ? "border-[#D0100B] ring-1 ring-[#D0100B]" : "border-black/5 hover:border-black/20"}`}>
-                <div className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">Criatório</div>
-                <div className="font-bold uppercase truncate">{f.criatorio}</div>
-                <div className="mt-1 text-sm text-neutral-600">{f.de === f.ate ? `Lote ${f.de}` : `Lotes ${f.de} a ${f.ate}`}</div>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
 
       <section id="pacotes" className="max-w-6xl mx-auto px-4 py-8 scroll-mt-20">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">

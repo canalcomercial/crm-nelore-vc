@@ -21,7 +21,12 @@ const SEM_EVENTO = "__nenhum__";
  */
 export function ImportarEmbrioesDialog({ open, onOpenChange, eventoInicial }: { open: boolean; onOpenChange: (v: boolean) => void; eventoInicial?: string }) {
   const { data: eventos = [] } = useEventos();
-  const eventosEmbrioes = useMemo(() => eventos.filter((e) => e.tipo === "embrioes"), [eventos]);
+  // Lista todos os eventos: os de embriões primeiro. Se o usuário escolher um
+  // evento que ainda está marcado como "Animais", ele é convertido na importação.
+  const eventosEmbrioes = useMemo(
+    () => [...eventos].sort((a, b) => Number(b.tipo === "embrioes") - Number(a.tipo === "embrioes")),
+    [eventos],
+  );
   const [eventoId, setEventoId] = useState<string>(eventoInicial ?? SEM_EVENTO);
   const [substituir, setSubstituir] = useState(true);
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -72,6 +77,13 @@ export function ImportarEmbrioesDialog({ open, onOpenChange, eventoInicial }: { 
     if (!previa?.pacotes.length) return;
     setGravando(true);
     try {
+      if (evento) {
+        const ev = eventos.find((e) => e.id === evento);
+        if (ev && ev.tipo !== "embrioes") {
+          const { error } = await supabase.from("eventos").update({ tipo: "embrioes" }).eq("id", evento);
+          if (error) throw error;
+        }
+      }
       if (evento && substituir) {
         const { error } = await supabase.from("animais").delete().eq("evento_id", evento).eq("categoria", "Embrião");
         if (error) throw error;
@@ -83,6 +95,8 @@ export function ImportarEmbrioesDialog({ open, onOpenChange, eventoInicial }: { 
       toast.success(`${previa.pacotes.length} ${previa.pacotes.length === 1 ? "pacote de embriões importado" : "pacotes de embriões importados"}`);
       qc.invalidateQueries({ queryKey: ["animais"] });
       qc.invalidateQueries({ queryKey: ["animais-por-evento"] });
+      qc.invalidateQueries({ queryKey: ["eventos"] });
+      qc.invalidateQueries({ queryKey: ["eventos-ativos"] });
       onOpenChange(false);
       limpar();
     } catch (e) {
@@ -115,11 +129,15 @@ export function ImportarEmbrioesDialog({ open, onOpenChange, eventoInicial }: { 
                 <SelectTrigger id="evento-embrioes"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={SEM_EVENTO}>Sem evento (só cadastrar)</SelectItem>
-                  {eventosEmbrioes.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
+                  {eventosEmbrioes.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.nome}{e.tipo !== "embrioes" ? " (será marcado como embriões)" : ""}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {eventosEmbrioes.length === 0 && (
-                <p className="text-[11px] text-muted-foreground">Crie um evento com tipo “Embriões” na aba Evento atual para publicar a página do catálogo.</p>
+                <p className="text-[11px] text-muted-foreground">Nenhum evento cadastrado. Crie um evento na aba Evento atual para publicar a página do catálogo.</p>
               )}
             </div>
             {evento && (

@@ -93,3 +93,26 @@ describe("Planilha de embriões", () => {
     expect(valorBR(41.55)).toBe("41,55");
   });
 });
+
+describe("Colunas abreviadas e extras", () => {
+  it("lê NOME/RGD AVÔ MAT., AVÓ MAT., PAT. e guarda colunas sem campo próprio", () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["LOTE", "NOME DO PACOTE", "NOME DOADORA", "RGD DOADORA", "NOME AVÔ MAT.", "RGD AVÔ MAT.", "NOME AVÓ MAT.", "NOME AVÔ PAT.", "TOURO", "CRIADOR RESPONSÁVEL", "PRAZO DE RETIRADA"],
+      ["5", "Pacote Teste", "VCA 100", "VCA100", "OBAMA", "OBA1", "7550 FIV", "IDEALIZADOR", "ABSOLUTO RG", "João", "60 dias"],
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "x");
+    const r = mapearArquivoEmbrioes(XLSX.write(wb, { bookType: "xlsx", type: "array" }) as ArrayBuffer, "x.xlsx");
+    expect(r.pacotes).toHaveLength(1);
+    const d = r.pacotes[0].embriao as EmbriaoDados;
+    const a = d.acasalamentos[0];
+    expect(a.avos_maternos[0]).toEqual({ nome: "OBAMA", registro: "OBA1" });
+    expect(a.avos_maternas?.[0].nome).toBe("7550 FIV");
+    expect(a.avos_paternos?.[0].nome).toBe("IDEALIZADOR");
+    expect(r.colunasDesconhecidas).toEqual(["CRIADOR RESPONSÁVEL", "PRAZO DE RETIRADA"]);
+    expect(d.extras).toEqual([
+      { rotulo: "CRIADOR RESPONSÁVEL", valor: "João" },
+      { rotulo: "PRAZO DE RETIRADA", valor: "60 dias" },
+    ]);
+  });
+});

@@ -38,7 +38,13 @@ function linha(label: string, valor: string, label2?: string, valor2?: string) {
 /** Monta o HTML da Nota de Transporte com toda a documentação das fazendas vendedora e compradora. */
 export function montarNotaTransporteHtml({ contrato, venda, lead, contratante: c }: Dados): string {
   const extras = ((venda?.campos_extras ?? {}) as Record<string, unknown>);
-  const ex = (k: string) => (extras[k] === undefined || extras[k] === null ? '' : String(extras[k]));
+  const ex = (k: string) => {
+    // Aceita as chaves padrão (doc_*) e as antigas (bovinos_*).
+    const alt = k.startsWith('bovinos_') ? `doc_${k.slice(8)}` : k.startsWith('doc_') ? `bovinos_${k.slice(4)}` : null;
+    const v = extras[k] ?? (alt ? extras[alt] : undefined);
+    return v === undefined || v === null ? '' : String(v);
+  };
+
   const emitidoEm = new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   const dataVenda = venda?.data_venda ? new Date(venda.data_venda).toLocaleDateString('pt-BR') : '';
   const especificacao = ex('bovinos_especificacao_lote')

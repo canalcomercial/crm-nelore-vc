@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Copy, Loader2, Eye, Code, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { sanitizeContratoHtml } from '@/lib/sanitize-html';
-import { TEMPLATE_NELORE_VC_HTML, TEMPLATE_NELORE_VC_NOME } from '@/lib/templates/contrato-nelore-vc';
+import { templatePadraoNeloreVC } from '@/lib/templates/contrato-nelore-vc';
 
 
 export function TemplateEditor() {
@@ -78,21 +78,20 @@ export function TemplateEditor() {
             />
           </div>
           <div className="flex gap-1">
-            {tipo === 'bovinos' && (
-              <Button
-                variant="outline"
-                size="sm"
-                title="Carrega o modelo oficial Nelore VC (nota de leilão + nota promissória + cláusulas). Clique em Salvar template para gravar."
-                onClick={() => {
-                  setHtml(TEMPLATE_NELORE_VC_HTML);
-                  setNome(TEMPLATE_NELORE_VC_NOME);
-                  setModo('preview');
-                  toast.success('Modelo Nelore VC carregado', { description: 'Revise e clique em "Salvar template".' });
-                }}
-              >
-                <Wand2 className="h-3.5 w-3.5 mr-1" /> Aplicar modelo Nelore VC
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              title="Carrega o modelo padrão Nelore VC (nota de leilão + nota promissória + cláusulas) já ajustado para este tipo de contrato. Clique em Salvar template para gravar."
+              onClick={() => {
+                const modelo = templatePadraoNeloreVC(tipo);
+                setHtml(modelo.html);
+                setNome(modelo.nome);
+                setModo('preview');
+                toast.success('Modelo padrão Nelore VC carregado', { description: 'Revise e clique em "Salvar template".' });
+              }}
+            >
+              <Wand2 className="h-3.5 w-3.5 mr-1" /> Aplicar modelo padrão
+            </Button>
             <Button variant={modo === 'edit' ? 'default' : 'outline'} size="sm" onClick={() => setModo('edit')}>
               <Code className="h-3.5 w-3.5 mr-1" /> Editar
             </Button>

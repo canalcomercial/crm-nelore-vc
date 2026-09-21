@@ -105,37 +105,38 @@ export const VARIAVEIS_COMUNS: { key: string; label: string }[] = [
   { key: 'contratante_inscricao_estadual', label: 'Contratante — inscrição estadual' },
   { key: 'contratante_cep', label: 'Contratante — CEP' },
   { key: 'contratante_fazenda', label: 'Contratante — fazenda' },
+  // Campos do modelo padrão (valem para todos os tipos)
+  { key: 'doc_nota', label: 'Nota nº' },
+  { key: 'doc_lote', label: 'Lote / partida' },
+  { key: 'doc_especificacao_lote', label: 'Especificação do lote / produto' },
+  { key: 'doc_contato_2', label: 'Contato 2 do comprador' },
+  { key: 'doc_cep', label: 'CEP do comprador' },
+  { key: 'doc_nf_nome', label: 'Nota fiscal em nome de' },
+  { key: 'doc_nf_inscricao', label: 'NF — inscrição estadual' },
+  { key: 'doc_nf_municipio', label: 'NF — município' },
+  { key: 'doc_valor_lance', label: 'Valor do lance (R$)' },
+  { key: 'doc_valor_desconto', label: 'Valor do desconto (R$)' },
+  { key: 'doc_valor_liquido', label: 'Valor líquido (R$)' },
+  { key: 'doc_valor_liquido_extenso', label: 'Valor líquido por extenso' },
+  { key: 'doc_comissao_percentual', label: '% comissão' },
+  { key: 'doc_valor_comissao', label: 'Valor da comissão (R$)' },
+  { key: 'doc_qtd_parcelas', label: 'Nº de parcelas (calculado)' },
+  { key: 'doc_primeiro_vencimento', label: 'Vencimento da 1ª parcela' },
+  { key: 'doc_ultimo_vencimento', label: 'Vencimento da última parcela' },
+  { key: 'doc_praca', label: 'Praça de pagamento (cidade/UF)' },
+  { key: 'doc_avalista_nome', label: 'Avalista — nome' },
+  { key: 'doc_avalista_cpf', label: 'Avalista — CPF/CNPJ' },
+  { key: 'doc_testemunha1', label: 'Testemunha 1' },
+  { key: 'doc_testemunha2', label: 'Testemunha 2' },
+  { key: 'tabela_parcelas_html', label: 'Tabela de parcelas (automática)' },
 ];
 
 // Backwards-compat alias
 export const VARIAVEIS_CONTRATO = VARIAVEIS_COMUNS;
 
 export const VARIAVEIS_POR_TIPO: Record<ContratoTipo, { key: string; label: string }[]> = {
-  bovinos: [
-    { key: 'bovinos_nota', label: 'Nota nº' },
-    { key: 'bovinos_lote', label: 'Lote' },
-    { key: 'bovinos_especificacao_lote', label: 'Especificação do lote' },
-    { key: 'bovinos_contato_2', label: 'Contato 2 do comprador' },
-    { key: 'bovinos_cep', label: 'CEP do comprador' },
-    { key: 'bovinos_nf_nome', label: 'Nota fiscal em nome de' },
-    { key: 'bovinos_nf_inscricao', label: 'NF — inscrição estadual' },
-    { key: 'bovinos_nf_municipio', label: 'NF — município' },
-    { key: 'bovinos_valor_lance', label: 'Valor do lance (R$)' },
-    { key: 'bovinos_valor_desconto', label: 'Valor do desconto (R$)' },
-    { key: 'bovinos_valor_liquido', label: 'Valor líquido (R$)' },
-    { key: 'bovinos_valor_liquido_extenso', label: 'Valor líquido por extenso' },
-    { key: 'bovinos_comissao_percentual', label: '% comissão' },
-    { key: 'bovinos_valor_comissao', label: 'Valor da comissão (R$)' },
-    { key: 'bovinos_qtd_parcelas', label: 'Nº de parcelas (calculado)' },
-    { key: 'bovinos_primeiro_vencimento', label: 'Vencimento da 1ª parcela' },
-    { key: 'bovinos_ultimo_vencimento', label: 'Vencimento da última parcela' },
-    { key: 'bovinos_praca', label: 'Praça de pagamento (cidade/UF)' },
-    { key: 'bovinos_avalista_nome', label: 'Avalista — nome' },
-    { key: 'bovinos_avalista_cpf', label: 'Avalista — CPF/CNPJ' },
-    { key: 'bovinos_testemunha1', label: 'Testemunha 1' },
-    { key: 'bovinos_testemunha2', label: 'Testemunha 2' },
-    { key: 'tabela_parcelas_html', label: 'Tabela de parcelas (automática)' },
-  ],
+  bovinos: [],
+
   embrioes: [
     { key: 'embrioes_raca', label: 'Embriões — raça' },
     { key: 'embrioes_doadora_nome', label: 'Embriões — doadora' },
@@ -160,27 +161,33 @@ export const VARIAVEIS_POR_TIPO: Record<ContratoTipo, { key: string; label: stri
   ],
 };
 
-export const CAMPOS_EXTRAS_POR_TIPO: Record<ContratoTipo, { key: string; label: string; type?: 'text' | 'number' | 'date' | 'textarea' }[]> = {
-  bovinos: [
-    { key: 'bovinos_nota', label: 'Nota nº' },
-    { key: 'bovinos_lote', label: 'Lote' },
-    { key: 'bovinos_especificacao_lote', label: 'Especificação do lote (animais, RGD, idade...)', type: 'textarea' },
-    { key: 'bovinos_valor_lance', label: 'Valor do lance (R$)', type: 'number' },
-    { key: 'bovinos_valor_desconto', label: 'Valor do desconto (R$)', type: 'number' },
-    { key: 'bovinos_comissao_percentual', label: '% comissão', type: 'number' },
-    { key: 'bovinos_primeiro_vencimento', label: 'Vencimento da 1ª parcela', type: 'date' },
-    { key: 'bovinos_praca', label: 'Praça de pagamento (cidade/UF)' },
-    { key: 'bovinos_contato_2', label: 'Contato 2 do comprador' },
-    { key: 'bovinos_cep', label: 'CEP do comprador' },
-    { key: 'bovinos_nf_nome', label: 'Nota fiscal em nome de' },
-    { key: 'bovinos_nf_inscricao', label: 'NF — inscrição estadual' },
-    { key: 'bovinos_nf_municipio', label: 'NF — município' },
-    { key: 'bovinos_avalista_nome', label: 'Avalista — nome' },
-    { key: 'bovinos_avalista_cpf', label: 'Avalista — CPF/CNPJ' },
-    { key: 'bovinos_testemunha1', label: 'Testemunha 1 — nome' },
-    { key: 'bovinos_testemunha2', label: 'Testemunha 2 — nome' },
-  ],
+type CampoExtra = { key: string; label: string; type?: 'text' | 'number' | 'date' | 'textarea' };
+
+/** Campos padrão do modelo — valem para todos os tipos de contrato. */
+export const CAMPOS_PADRAO: CampoExtra[] = [
+  { key: 'doc_nota', label: 'Nota nº' },
+  { key: 'doc_lote', label: 'Lote / partida' },
+  { key: 'doc_especificacao_lote', label: 'Especificação do lote / produto', type: 'textarea' },
+  { key: 'doc_valor_lance', label: 'Valor do lance (R$)', type: 'number' },
+  { key: 'doc_valor_desconto', label: 'Valor do desconto (R$)', type: 'number' },
+  { key: 'doc_comissao_percentual', label: '% comissão', type: 'number' },
+  { key: 'doc_primeiro_vencimento', label: 'Vencimento da 1ª parcela', type: 'date' },
+  { key: 'doc_praca', label: 'Praça de pagamento (cidade/UF)' },
+  { key: 'doc_contato_2', label: 'Contato 2 do comprador' },
+  { key: 'doc_cep', label: 'CEP do comprador' },
+  { key: 'doc_nf_nome', label: 'Nota fiscal em nome de' },
+  { key: 'doc_nf_inscricao', label: 'NF — inscrição estadual' },
+  { key: 'doc_nf_municipio', label: 'NF — município' },
+  { key: 'doc_avalista_nome', label: 'Avalista — nome' },
+  { key: 'doc_avalista_cpf', label: 'Avalista — CPF/CNPJ' },
+  { key: 'doc_testemunha1', label: 'Testemunha 1 — nome' },
+  { key: 'doc_testemunha2', label: 'Testemunha 2 — nome' },
+];
+
+export const CAMPOS_EXTRAS_POR_TIPO: Record<ContratoTipo, CampoExtra[]> = {
+  bovinos: [...CAMPOS_PADRAO],
   embrioes: [
+    ...CAMPOS_PADRAO,
     { key: 'embrioes_raca', label: 'Raça' },
     { key: 'embrioes_doadora_nome', label: 'Doadora — nome' },
     { key: 'embrioes_doadora_registro', label: 'Doadora — registro' },
@@ -193,6 +200,7 @@ export const CAMPOS_EXTRAS_POR_TIPO: Record<ContratoTipo, { key: string; label: 
     { key: 'embrioes_entrega', label: 'Forma de entrega', type: 'textarea' },
   ],
   semen: [
+    ...CAMPOS_PADRAO,
     { key: 'semen_touro_nome', label: 'Touro — nome' },
     { key: 'semen_touro_registro', label: 'Touro — registro' },
     { key: 'semen_touro_rgn', label: 'Touro — RGN' },
@@ -203,6 +211,7 @@ export const CAMPOS_EXTRAS_POR_TIPO: Record<ContratoTipo, { key: string; label: 
     { key: 'semen_armazenamento', label: 'Condições de armazenamento', type: 'textarea' },
   ],
 };
+
 
 export function tipoDaCategoria(categoria: string | null | undefined): ContratoTipo {
   const c = (categoria ?? '').toLowerCase();

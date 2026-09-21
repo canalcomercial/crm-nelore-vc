@@ -110,18 +110,26 @@ function pessoas(nomes: unknown, registros: unknown, separarVirgula = false): Em
   });
 }
 
-/** Mapeia cabeçalhos fora do padrão pelo significado (ex.: "Embriões DT", "Nº de parcelas"). */
-function chavePorAproximacao(n: string): string | null {
+/**
+ * Mapeia cabeçalhos fora do padrão pelo significado (ex.: "Embriões DT",
+ * "Nº de parcelas", "NOME AVÔ MAT.", "RGD AVÓ PAT."). O texto original
+ * (com acentos) é usado para diferenciar AVÔ (macho) de AVÓ (fêmea).
+ */
+function chavePorAproximacao(n: string, bruto = ""): string | null {
+  const reg = /\b(REG|REGISTRO|RGD|RGN|RG)\b/.test(n);
+  const femea = /AVÓ|AVÒ|AVÓS/i.test(bruto) || /\bMAE\b/.test(n);
+  const avo = /\bAVO(S)?\b/.test(n);
+  if (avo && /\bMAT/.test(n)) return femea ? (reg ? "reg_avo_f" : "avo_f") : reg ? "reg_avo" : "avo";
+  if (avo && /\bPAT/.test(n)) return femea ? (reg ? "reg_mae_touro" : "mae_touro") : reg ? "reg_pai_touro" : "pai_touro";
   if (/EMBRI/.test(n) && /(QTD|QUANT|N |Nº|DT|PACOTE)/.test(n) && !/VALOR|PRECO|ACASALAMENTO/.test(n)) return "quantidade";
   if (/PARCEL/.test(n)) return "parcelas";
   if (/GARANTIA/.test(n) && /%|PERCENT/.test(n)) return "garantia_percentual";
   if (/GARANTIA/.test(n) && !/REGRA|REQUISITO|CONDIC/.test(n)) return "garantia_prenhezes";
   if (/VALOR|PRECO/.test(n) && /EMBRI/.test(n)) return "valor_embriao";
   if (/VALOR|PRECO/.test(n) && /PACOTE|TOTAL|LOTE/.test(n)) return "valor_pacote";
-  if (/^(REG|REGISTRO|RGD|RGN)\b/.test(n) && /DOADORA/.test(n)) return "reg_doadora";
-  if (/^(REG|REGISTRO|RGD|RGN)\b/.test(n) && /(TOURO|ACASAL|PAI)/.test(n)) return "reg_touro";
+  if (reg && /DOADORA|\bMAE\b/.test(n)) return "reg_doadora";
+  if (reg && /(TOURO|ACASAL|\bPAI\b)/.test(n)) return "reg_touro";
   if (/DOADORA/.test(n) && !/VIDEO|FOTO/.test(n)) return "doadora";
-  if (/AVO MATERNO/.test(n)) return "avo";
   if (/(TOURO|ACASALAMENTO)/.test(n) && !/LINK|QTD|OBS|LIVRE/.test(n)) return "touro";
   if (/CRIATORIO|VENDEDOR|FORNECEDOR/.test(n)) return "criatorio";
   if (/SEMEN|SEXAD/.test(n)) return "semen";
@@ -165,7 +173,13 @@ export type ResultadoEmbrioes = {
   avisos: string[];
 };
 
-type Pacote = { lote: string; campos: Record<string, unknown>; acasalamentos: EmbriaoAcasalamento[] };
+type Pacote = {
+  lote: string;
+  campos: Record<string, unknown>;
+  acasalamentos: EmbriaoAcasalamento[];
+  /** Colunas da planilha sem campo próprio, na ordem em que aparecem. */
+  extras: Map<string, string[]>;
+};
 
 function acasalamentoDaLinha(get: (k: string) => unknown): EmbriaoAcasalamento | null {
   const ancp: EmbriaoProjecao[] = [];
@@ -204,9 +218,12 @@ export function mapearPlanilhaEmbrioes(matriz: unknown[][], opts: { eventoId?: s
     vazio.avisos.push('Não encontrei o cabeçalho da planilha de embriões. Ele precisa ter as colunas "LOTE" e "DOADORA" (ou "NOME DO PACOTE"). Baixe o modelo de embriões.');
     return vazio;
   }
-  const cab = (matriz[idx] ?? []).map(normalizarCabecalho);
+  const brutos = (matriz[idx] ?? []).map((v) => txt(v));
+  const cab = brutos.map(normalizarCabecalho);
   const colPorChave = new Map<string, number>();
   const desconhecidas: string[] = [];
+  /** Colunas sem campo próprio: viram informações extras do pacote (nada é descartado). */
+  const colExtras: { i: number; rotulo: string }[] = [];
   let ultimaDep: string | null = null;
   let ultimaPmgz = false;
   cab.forEach((c, i) => {
@@ -223,11 +240,14 @@ export function mapearPlanilhaEmbrioes(matriz: unknown[][], opts: { eventoId?: s
       if (!colPorChave.has(k)) colPorChave.set(k, i);
       return;
     }
-    const chave = INDICE_COLUNAS.get(c) ?? chavePorAproximacao(c);
+    const chave = INDICE_COLUNAS.get(c) ?? chavePorAproximacao(c, brutos[i]);
     ultimaDep = chave?.startsWith("ancp:") ? chave.slice(5) : null;
     ultimaPmgz = chave === "iabcz" || (ultimaPmgz && (chave === "deca" || chave === "p"));
     if (chave && !colPorChave.has(chave)) colPorChave.set(chave, i);
-    else if (!chave) desconhecidas.push(String((matriz[idx] ?? [])[i] ?? c));
+    else if (!chave) {
+      desconhecidas.push(brutos[i] || c);
+      colExtras.push({ i, rotulo: brutos[i] || c });
+    }
   });
 
   const pacotes: Pacote[] = [];
@@ -248,7 +268,7 @@ export function mapearPlanilhaEmbrioes(matriz: unknown[][], opts: { eventoId?: s
       const chave = normalizarCabecalho(loteTxt);
       pacote = porLote.get(chave);
       if (!pacote) {
-        pacote = { lote: loteTxt, campos: {}, acasalamentos: [] };
+        pacote = { lote: loteTxt, campos: {}, acasalamentos: [], extras: new Map() };
         porLote.set(chave, pacote);
         pacotes.push(pacote);
       }
@@ -261,6 +281,13 @@ export function mapearPlanilhaEmbrioes(matriz: unknown[][], opts: { eventoId?: s
       if (c.grupo === "ACASALAMENTO" || c.grupo === "PROJEÇÕES ANCP" || c.grupo === "PMGZ" || c.chave === "lote") continue;
       const v = get(c.chave);
       if (txt(v) !== "" && pacote.campos[c.chave] == null) pacote.campos[c.chave] = v;
+    }
+    for (const e of colExtras) {
+      const v = txt(linha[e.i]);
+      if (!v) continue;
+      const atual = pacote.extras.get(e.rotulo) ?? [];
+      if (!atual.includes(v)) atual.push(v);
+      pacote.extras.set(e.rotulo, atual);
     }
     const a = acasalamentoDaLinha(get);
     if (a) { pacote.acasalamentos.push(a); totalAcas++; }
@@ -305,6 +332,7 @@ function montarLinhaAnimal(p: Pacote, eventoId: string | null): Record<string, u
     link_video_doadora: txt(c.link_video_doadora) || undefined,
     link_acasalamentos: txt(c.link_acasalamentos) || undefined,
     fotos: fotos.length ? fotos : undefined,
+    extras: p.extras.size ? [...p.extras].map(([rotulo, vs]) => ({ rotulo, valor: vs.join(" · ") })) : undefined,
     acasalamentos: p.acasalamentos,
   };
 

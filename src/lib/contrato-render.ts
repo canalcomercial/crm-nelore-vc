@@ -60,11 +60,20 @@ export function montarVariaveis(
   const dataVenda = venda.data_venda ? new Date(venda.data_venda) : new Date(venda.criado_em);
   const dataFmt = dataVenda.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
   const extras = (venda.campos_extras ?? {}) as Record<string, unknown>;
+  // Aceita as chaves padrão (doc_*) e as antigas (bovinos_*) de forma intercambiável.
+  const rawExtra = (k: string) => {
+    const alt = k.startsWith('doc_')
+      ? `bovinos_${k.slice(4)}`
+      : k.startsWith('bovinos_') ? `doc_${k.slice(8)}` : null;
+    const v = extras[k] ?? (alt ? extras[alt] : undefined);
+    return v;
+  };
   const getExtra = (k: string) => {
-    const v = extras[k];
+    const v = rawExtra(k);
     if (v === undefined || v === null || v === '') return '—';
     return String(v);
   };
+
   const base: Record<string, string> = {
     numero_contrato: String(numero),
     cliente_nome: venda.cliente_nome || '—',
@@ -105,9 +114,14 @@ export function montarVariaveis(
     contratante_cep: contratante?.cep || '—',
     contratante_fazenda: contratante?.fazenda_nome || '—',
   };
-  if (tipo === 'bovinos') {
-    Object.assign(base, montarVariaveisBovinos(venda, contratante, dataVenda, getExtra));
-  } else if (tipo === 'embrioes') {
+  // Bloco padrão (nota/lote, valores, comissão, parcelas, avalista, testemunhas)
+  // vale para TODOS os tipos de contrato — só as informações mudam.
+  const padrao = montarVariaveisPadrao(venda, contratante, dataVenda, getExtra);
+  Object.assign(base, padrao);
+  for (const [k, v] of Object.entries(padrao)) {
+    if (k.startsWith('bovinos_')) base[`doc_${k.slice(8)}`] = v;
+  }
+  if (tipo === 'embrioes') {
     for (const k of [
       'embrioes_raca','embrioes_doadora_nome','embrioes_doadora_registro',
       'embrioes_touro_nome','embrioes_touro_registro','embrioes_qtd',
@@ -120,6 +134,7 @@ export function montarVariaveis(
       'semen_data_coleta','semen_armazenamento',
     ]) base[k] = getExtra(k);
   }
+
   return base;
 }
 
@@ -177,23 +192,24 @@ export function tabelaParcelasHtml(parcelas: Parcela[]): string {
   return `<table style="width:100%;border-collapse:collapse;margin:6px 0">${rows.join('')}</table>`;
 }
 
-function montarVariaveisBovinos(
+function montarVariaveisPadrao(
   venda: Venda,
   contratante: ContratoContratante | null,
   dataVenda: Date,
   getExtra: (k: string) => string,
 ): Record<string, string> {
-  const extras = (venda.campos_extras ?? {}) as Record<string, unknown>;
+  const opt = (k: string) => (getExtra(k) === '—' ? undefined : getExtra(k));
   const valor = Number(venda.valor_total) || 0;
   const qtdParcelas = venda.qtd_parcelas && venda.qtd_parcelas > 0 ? venda.qtd_parcelas : 1;
   const quantidade = venda.quantidade && venda.quantidade > 0 ? venda.quantidade : 1;
-  const desconto = numExtra(extras.bovinos_valor_desconto) ?? 0;
+  const desconto = numExtra(opt('bovinos_valor_desconto')) ?? 0;
   const liquido = Math.max(0, valor - desconto);
-  const lance = numExtra(extras.bovinos_valor_lance) ?? valor / qtdParcelas / quantidade;
-  const comissaoPct = numExtra(extras.bovinos_comissao_percentual) ?? (venda.comissao_percentual ?? 0);
-  const primeiroVencStr = String(extras.bovinos_primeiro_vencimento ?? '');
+  const lance = numExtra(opt('bovinos_valor_lance')) ?? valor / qtdParcelas / quantidade;
+  const comissaoPct = numExtra(opt('bovinos_comissao_percentual')) ?? (venda.comissao_percentual ?? 0);
+  const primeiroVencStr = opt('bovinos_primeiro_vencimento') ?? '';
   const primeiroVenc = (primeiroVencStr && parseDataLocal(primeiroVencStr)) || dataVenda;
   const parcelas = calcularParcelas(liquido, qtdParcelas, primeiroVenc);
+
   const praca = getExtra('bovinos_praca') !== '—'
     ? getExtra('bovinos_praca')
     : [contratante?.cidade, contratante?.uf].filter(Boolean).join('/') || '—';
