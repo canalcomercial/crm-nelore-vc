@@ -1,1 +1,2 @@
-/*  /index.html  200
+# O fallback SPA é configurado em wrangler.jsonc.
+# Não adicionar rewrite global para /index.html: Workers detecta loop.
