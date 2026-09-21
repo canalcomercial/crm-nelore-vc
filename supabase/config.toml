@@ -1,0 +1,12 @@
+project_id = "rxmbgztsmydqqgceybnc"
+
+[functions.contrato-publico]
+verify_jwt = false
+
+[functions.assinar-contrato]
+verify_jwt = false
+
+# A Meta não envia JWT do Supabase; a autenticidade da entrega é verificada
+# dentro da função, por HMAC-SHA256 do corpo com o App Secret.
+[functions.meta-lead-webhook]
+verify_jwt = false

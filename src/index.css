@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* JV Assessoria Pecuária — Brand: navy #0F1B2D + light blue-gray */
+    --background: 210 30% 97%;         /* #F2F5F9 */
+    --foreground: 215 50% 12%;         /* #0F1B2D navy */
+
+    --surface: 0 0% 100%;
+    --surface-foreground: 215 50% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 50% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 50% 12%;
+
+    --primary: 215 55% 13%;            /* #0F1B2D — navy do logo */
+    --primary-foreground: 210 30% 97%;
+    --primary-soft: 215 35% 92%;
+
+    --secondary: 214 25% 92%;
+    --secondary-foreground: 215 50% 12%;
+
+    --muted: 214 25% 94%;
+    --muted-foreground: 215 15% 40%;
+
+    --accent: 215 35% 92%;
+    --accent-foreground: 215 55% 18%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 215 50% 12%;
+
+    --success: 153 50% 38%;
+    --success-foreground: 0 0% 100%;
+
+    --info: 215 70% 45%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 215 55% 25%;
+
+    --radius: 0.625rem;
+
+    /* Sidebar = navy do logo */
+    --sidebar-background: 215 55% 11%;     /* #0E1A2C */
+    --sidebar-foreground: 214 25% 75%;
+    --sidebar-primary: 210 30% 97%;
+    --sidebar-primary-foreground: 215 55% 13%;
+    --sidebar-accent: 215 45% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 45% 18%;
+    --sidebar-ring: 210 30% 90%;
+
+    /* Catálogo público Nelore VC — preto, vermelho e branco do logo */
+    --catalog-primary: 207 20% 9%;    /* #12171B — preto VC */
+    --catalog-accent: 358 92% 42%;    /* #D0100B — vermelho VC */
+    --catalog-bg: 210 12% 96%;        /* #F4F5F6 */
+  }
+
+  .dark {
+    --background: 215 55% 8%;
+    --foreground: 210 30% 95%;
+    --surface: 215 50% 12%;
+    --card: 215 50% 12%;
+    --card-foreground: 210 30% 95%;
+    --popover: 215 50% 12%;
+    --popover-foreground: 210 30% 95%;
+    --primary: 210 30% 95%;
+    --primary-foreground: 215 55% 13%;
+    --secondary: 215 40% 18%;
+    --secondary-foreground: 210 30% 95%;
+    --muted: 215 40% 18%;
+    --muted-foreground: 214 20% 65%;
+    --accent: 215 40% 18%;
+    --accent-foreground: 210 30% 95%;
+    --border: 215 35% 22%;
+    --input: 215 35% 22%;
+    --ring: 210 30% 80%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, .font-display {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}

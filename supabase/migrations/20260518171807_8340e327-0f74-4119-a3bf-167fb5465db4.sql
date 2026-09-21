@@ -1,0 +1,2 @@
+ALTER TABLE public.follow_ups DROP CONSTRAINT follow_ups_responsavel_id_fkey;
+ALTER TABLE public.follow_ups ADD CONSTRAINT follow_ups_responsavel_id_fkey FOREIGN KEY (responsavel_id) REFERENCES public.profiles(id) ON DELETE SET NULL;

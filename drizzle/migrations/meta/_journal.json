@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788884731339,
+      "tag": "0000_restrict_pagina_config_public_read",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788973221440,
+      "tag": "0001_harden_public_reads_and_realtime",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789142984972,
+      "tag": "0002_restore_commercial_page_draft_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789492670943,
+      "tag": "0003_nelore_vc_documentacao_propriedade",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789495812188,
+      "tag": "0004_catalogo_embrioes",
+      "breakpoints": true
+    }
+  ]
+}
