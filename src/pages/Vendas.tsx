@@ -119,7 +119,7 @@ export default function VendasPage() {
     if (periodo === "range") {
       const s = format(intervaloAtivo.start, "dd/MM/yy", { locale: ptBR });
       const e = format(intervaloAtivo.end, "dd/MM/yy", { locale: ptBR });
-      return `${s} â€“ ${e}`;
+      return `${s} – ${e}`;
     }
     return "";
   }, [intervaloAtivo, periodo, mesEsp, anoEsp]);
@@ -266,9 +266,9 @@ export default function VendasPage() {
               <SelectItem value="mes_atual">Este mês</SelectItem>
               <SelectItem value="mes_passado">Mês passado</SelectItem>
               <SelectItem value="ano_atual">Este ano</SelectItem>
-              <SelectItem value="mes">Mês específicoâ€¦</SelectItem>
-              <SelectItem value="ano">Ano específicoâ€¦</SelectItem>
-              <SelectItem value="range">Intervalo personalizadoâ€¦</SelectItem>
+              <SelectItem value="mes">Mês específico…</SelectItem>
+              <SelectItem value="ano">Ano específico…</SelectItem>
+              <SelectItem value="range">Intervalo personalizado…</SelectItem>
             </SelectContent>
           </Select>
 
@@ -362,7 +362,7 @@ export default function VendasPage() {
                     </span>
                   </TableCell>
                   <TableCell>{v.categoria}</TableCell>
-                  <TableCell className="text-muted-foreground">{v.produto ?? "â€”"}</TableCell>
+                  <TableCell className="text-muted-foreground">{v.produto ?? "—"}</TableCell>
                   <TableCell className="text-right">{v.quantidade}</TableCell>
                   <TableCell className="text-right font-semibold">{fmtBRL(Number(v.valor_total))}</TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -372,10 +372,10 @@ export default function VendasPage() {
                     {(() => {
                       const tipo = v.tipo_vendedor ?? "interno";
                       if (tipo === "interno") {
-                        return v.vendedor_id ? (userById.get(v.vendedor_id)?.nome ?? "â€”") : "â€”";
+                        return v.vendedor_id ? (userById.get(v.vendedor_id)?.nome ?? "—") : "—";
                       }
                       const prefix = tipo === "leiloeira" ? "Leiloeira: " : "Externo: ";
-                      return v.vendedor_externo ? `${prefix}${v.vendedor_externo}` : "â€”";
+                      return v.vendedor_externo ? `${prefix}${v.vendedor_externo}` : "—";
                     })()}
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -413,7 +413,7 @@ function PagamentoCell({ venda }: { venda: Venda }) {
     || [venda.qtd_parcelas ? `${venda.qtd_parcelas}x` : null, venda.tipo_parcelamento]
         .filter(Boolean).join(" ")
     || venda.forma_pagamento
-    || "â€”";
+    || "—";
 
   const salvar = () => {
     update.mutate(
@@ -501,7 +501,7 @@ function ComissaoCell({ venda }: { venda: Venda }) {
 
   const resumo = venda.comissao_percentual != null
     ? `${Number(venda.comissao_percentual).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% · ${fmtBRL((Number(venda.valor_total) * Number(venda.comissao_percentual)) / 100)}`
-    : "â€”";
+    : "—";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
