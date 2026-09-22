@@ -65,7 +65,7 @@ export default function EquipePage() {
           <div className="grid gap-3 max-w-3xl">
             {membros.map((m) => {
               const isMe = m.id === user?.id;
-              const role = m.roles[0] ?? "vendedor";
+              const role: AppRole = m.roles.includes("coordenador") ? "coordenador" : "vendedor";
               return (
                 <Card key={m.id} className="p-4 flex items-center gap-4">
                   <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">

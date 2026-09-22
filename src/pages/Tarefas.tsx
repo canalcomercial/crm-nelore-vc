@@ -131,7 +131,7 @@ export default function TarefasPage() {
               <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Selecionar..." /></SelectTrigger>
               <SelectContent className="max-h-72">
                 {leads.slice(0, 100).map((l) => (
-                  <SelectItem key={l.id} value={l.id}>#{l.numero} â€” {l.nome}</SelectItem>
+                  <SelectItem key={l.id} value={l.id}>#{l.numero} — {l.nome}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

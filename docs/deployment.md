@@ -33,3 +33,29 @@ os modelos novos.
 Executar npm ci e npm run check. Após publicar, verificar HTTPS, abertura direta
 das rotas, login, permissões, leitura e gravação, upload e emissão de documentos.
 Testes de envio à Meta e WhatsApp dependem das contas e credenciais externas.
+
+## Migração do Lovable — 21 e 22/09/2026
+
+O backup foi importado em transação, após validação com rollback. Foram migrados
+157 leads, 1.160 interações, seis funis, 15 animais, três eventos, três vendas,
+um contrato, nove propostas, quatro follow-ups e dois registros de documentos.
+As configurações comerciais, dados do contratante e sete versões dos templates
+foram preservados. Os três templates iniciais do destino foram arquivados.
+As contagens refletem o backup; o uso posterior do CRM pode alterá-las.
+
+As contas existentes foram vinculadas pelo email. A conta ausente foi migrada,
+e o perfil coordenador foi acrescentado à conta focomoz15. As sequências de
+numeração foram ajustadas para não reutilizar números importados.
+
+Cinco arquivos foram transferidos com conferência SHA-256 do conteúdo gravado.
+Os anexos de clientes permanecem privados. Os endereços de mídia da configuração
+comercial foram atualizados para o projeto de destino. A função temporária
+`migration-files-20260921` foi desativada: retorna HTTP 410 e não acessa o banco
+nem o armazenamento. Os backups e credenciais de migração ficam fora do Git.
+
+A origem não tinha App ID nem token de página configurados para a integração
+Meta. A configuração foi preservada, mas a conexão externa requer credenciais
+válidas para receber leads reais. Não considerar envio de mensagens ou assinatura
+real de contratos como testados apenas pela validação técnica das telas.
+
+Para verificações HTTP sem modificar dados: `node scripts/smoke-production.mjs`.
