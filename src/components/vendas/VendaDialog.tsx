@@ -135,12 +135,12 @@ export function VendaDialog({ trigger, open: openProp, onOpenChange, leadId, cli
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{editMode ? "Editar venda" : "Registrar venda"}</DialogTitle>
           <DialogDescription>{editMode ? "Atualize os dados da venda." : "Preencha os dados para registrar uma nova venda."}</DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-3 py-2">
+        <div className="grid grid-cols-1 gap-3 py-2 sm:grid-cols-2">
           <Field label="Data da venda *">
             <Popover>
               <PopoverTrigger asChild>
@@ -302,8 +302,8 @@ export function VendaDialog({ trigger, open: openProp, onOpenChange, leadId, cli
 
 function Field({ label, children, full }: { label: string; children: ReactNode; full?: boolean }) {
   return (
-    <div className={cn("space-y-1", full && "col-span-2")}>
-      <label className="text-[11px] font-medium text-muted-foreground">{label}</label>
+    <div className={cn("min-w-0 space-y-1", full && "sm:col-span-2")}>
+      <label className="block text-[11px] font-medium text-muted-foreground">{label}</label>
       {children}
     </div>
   );
