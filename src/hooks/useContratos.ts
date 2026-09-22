@@ -121,10 +121,10 @@ export async function signedPdfUrl(pdfPath: string, expiresIn = 60 * 60 * 24 * 7
 }
 
 export async function uploadContratoPdf(contratoId: string, blob: Blob): Promise<string> {
-  const path = `${contratoId}/contrato-${Date.now()}.pdf`;
+  const path = `${contratoId}/contrato-${crypto.randomUUID()}.pdf`;
   const { error } = await supabase.storage.from('contratos-pdf').upload(path, blob, {
     contentType: 'application/pdf',
-    upsert: true,
+    upsert: false,
   });
   if (error) throw error;
   return path;

@@ -148,7 +148,7 @@ export function EmitirContratoDialog({ trigger, open: openProp, onOpenChange, le
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         {trigger}
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" /> Emitir contrato
@@ -164,7 +164,7 @@ export function EmitirContratoDialog({ trigger, open: openProp, onOpenChange, le
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-3 py-2">
+          <div className="grid grid-cols-1 gap-3 py-2 sm:grid-cols-2">
             <Field label="Data do contrato *">
               <Popover>
                 <PopoverTrigger asChild>
@@ -280,7 +280,7 @@ export function EmitirContratoDialog({ trigger, open: openProp, onOpenChange, le
               <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                 Dados do contrato — {LABEL_TIPO[tipo]}
               </h4>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {CAMPOS_EXTRAS_POR_TIPO[tipo].map((f) => {
                   const val = extras[f.key] ?? '';
                   const onChange = (v: string) => setExtras((p) => ({ ...p, [f.key]: v }));
@@ -334,8 +334,8 @@ export function EmitirContratoDialog({ trigger, open: openProp, onOpenChange, le
 
 function Field({ label, children, full }: { label: string; children: ReactNode; full?: boolean }) {
   return (
-    <div className={cn("space-y-1", full && "col-span-2")}>
-      <label className="text-[11px] font-medium text-muted-foreground">{label}</label>
+    <div className={cn("min-w-0 space-y-1", full && "sm:col-span-2")}>
+      <label className="block text-[11px] font-medium text-muted-foreground">{label}</label>
       {children}
     </div>
   );

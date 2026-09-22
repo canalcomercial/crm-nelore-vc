@@ -64,11 +64,13 @@ export async function gerarContratoDaVenda(vendaId: string): Promise<Contrato> {
   );
   const finalHtml = renderTemplate((template as ContratoTemplate).conteudo_html, vars);
 
-  await supabase.from('contratos').update({ conteudo_final: finalHtml }).eq('id', contrato.id);
+  const { error: conteudoError } = await supabase.from('contratos').update({ conteudo_final: finalHtml }).eq('id', contrato.id);
+  if (conteudoError) throw conteudoError;
 
   const blob = await htmlParaPdfBlob(finalHtml);
   const path = await uploadContratoPdf(contrato.id, blob);
-  await supabase.from('contratos').update({ pdf_path: path }).eq('id', contrato.id);
+  const { error: pdfError } = await supabase.from('contratos').update({ pdf_path: path }).eq('id', contrato.id);
+  if (pdfError) throw pdfError;
 
   return { ...contrato, conteudo_final: finalHtml, pdf_path: path };
 }

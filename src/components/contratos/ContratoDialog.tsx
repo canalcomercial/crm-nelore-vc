@@ -124,7 +124,8 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
   const persistirExtrasNaVenda = async () => {
     if (CAMPOS_EXTRAS_POR_TIPO[tipo].length === 0) return;
     const merged = { ...(venda.campos_extras ?? {}), ...extras };
-    await supabase.from('vendas').update({ campos_extras: merged }).eq('id', venda.id);
+    const { error } = await supabase.from('vendas').update({ campos_extras: merged }).eq('id', venda.id);
+    if (error) throw error;
   };
 
   const gerarPdfEUpload = async (c: Contrato) => {
@@ -240,9 +241,9 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex flex-wrap items-center gap-2 pr-6">
             <FileText className="h-5 w-5" />
             {contrato ? `Contrato #${contrato.numero}` : 'Gerar contrato de compra e venda'}
             <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
@@ -287,13 +288,13 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
             <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
               Dados específicos — {LABEL_TIPO[tipo]}
             </h4>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {CAMPOS_EXTRAS_POR_TIPO[tipo].map((f) => {
                 const val = extras[f.key] ?? '';
                 const onChange = (v: string) => setExtras((prev) => ({ ...prev, [f.key]: v }));
                 if (f.type === 'textarea') {
                   return (
-                    <div key={f.key} className="col-span-2 space-y-1">
+                    <div key={f.key} className="min-w-0 space-y-1 sm:col-span-2">
                       <label className="text-[11px] font-medium text-muted-foreground">{f.label}</label>
                       <Textarea
                         value={val}
@@ -304,7 +305,7 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
                   );
                 }
                 return (
-                  <div key={f.key} className="space-y-1">
+                  <div key={f.key} className="min-w-0 space-y-1">
                     <label className="text-[11px] font-medium text-muted-foreground">{f.label}</label>
                     <Input
                       type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
@@ -319,7 +320,7 @@ export function ContratoDialog({ open, onOpenChange, venda, lead }: Props) {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto border border-border rounded-lg bg-white text-black p-8 my-3">
+        <div className="min-h-48 max-h-[50dvh] overflow-auto border border-border rounded-lg bg-white text-black p-3 sm:p-8 my-3">
           {editando ? (
             <div
               ref={editorRef}
