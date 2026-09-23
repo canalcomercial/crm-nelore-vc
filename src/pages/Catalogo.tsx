@@ -61,8 +61,6 @@ export default function CatalogoPage() {
     return () => window.removeEventListener("message", onMsg);
   }, [isPreview]);
 
-  // Mobile: horizontal snap scroll. Desktop: grid controlled via media queries.
-
   const lista = useMemo(() => {
     let l = [...animais];
     if (evento) l = l.filter((a) => a.evento_id === evento.id);
@@ -76,12 +74,9 @@ export default function CatalogoPage() {
     return l;
   }, [animais, ordem, categoria, evento]);
 
-  const CARROSSEL_QTD = 6;
   const PAGINA = 12;
-  const destaquesCarrossel = useMemo(() => lista.slice(0, CARROSSEL_QTD), [lista]);
-  const restantes = useMemo(() => lista.slice(CARROSSEL_QTD), [lista]);
   const [visiveis, setVisiveis] = useState(PAGINA);
-  const restantesVisiveis = useMemo(() => restantes.slice(0, visiveis), [restantes, visiveis]);
+  const listaVisivel = useMemo(() => lista.slice(0, visiveis), [lista, visiveis]);
   const sentinelaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setVisiveis(PAGINA), [categoria, ordem, evento?.id]);
@@ -94,7 +89,7 @@ export default function CatalogoPage() {
     }, { rootMargin: "200px" });
     obs.observe(el);
     return () => obs.disconnect();
-  }, [restantesVisiveis.length, restantes.length]);
+  }, [listaVisivel.length, lista.length]);
 
   const abrirInteresse = (a: Animal) => {
     const numero = config?.whatsapp?.replace(/\D/g, "");
@@ -130,7 +125,7 @@ export default function CatalogoPage() {
             <span className="font-display text-lg font-semibold text-[hsl(var(--catalog-primary))]">Nelore VC</span>
           </Link>
           {evento?.nome && <span className="hidden md:block text-sm text-neutral-500 border-l pl-4 ml-2">{evento.nome}</span>}
-          <nav className="ml-auto flex items-center gap-5 text-sm text-neutral-600">
+          <nav className="ml-auto hidden sm:flex items-center gap-5 text-sm text-neutral-600">
             {[
               { id: "inicio", label: "Início" },
               { id: "animais", label: "Animais" },
@@ -209,13 +204,13 @@ export default function CatalogoPage() {
             <Users className="h-4 w-4 text-[hsl(var(--catalog-primary))]" />
             <span><b className="text-neutral-900">{animais.length}</b> {animais.length === 1 ? layout.texto_contador_singular : layout.texto_contador_plural}</span>
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
             <Select value={categoria} onValueChange={setCategoria}>
-              <SelectTrigger className="w-[160px] bg-white"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="min-w-0 w-full sm:w-[160px] bg-white"><SelectValue /></SelectTrigger>
               <SelectContent>{CATEGORIAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
             <Select value={ordem} onValueChange={(v) => setOrdem(v as OrdemKey)}>
-              <SelectTrigger className="w-[190px] bg-white"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="min-w-0 w-full sm:w-[190px] bg-white"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="padrao">Ordem padrão</SelectItem>
                 <SelectItem value="maior_preco">Maior preço</SelectItem>
@@ -242,25 +237,15 @@ export default function CatalogoPage() {
         ) : (
           <>
             <div className="catalog-grid">
-              {destaquesCarrossel.map((a) => (
+              {listaVisivel.map((a) => (
                 <div key={a.id} className="catalog-item">
                   <AnimalCard animal={a} layout={layout} onInteresse={() => abrirInteresse(a)} onVerVideo={() => abrirVideo(a)} />
                 </div>
               ))}
             </div>
-
-            {restantes.length > 0 && (
-              <div className="mt-6">
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-                  {restantesVisiveis.map((a) => (
-                    <AnimalCard key={a.id} animal={a} layout={layout} onInteresse={() => abrirInteresse(a)} onVerVideo={() => abrirVideo(a)} />
-                  ))}
-                </div>
-                {restantesVisiveis.length < restantes.length && (
-                  <div ref={sentinelaRef} className="py-8 text-center text-sm text-neutral-500">
-                    Carregando mais animais...
-                  </div>
-                )}
+            {listaVisivel.length < lista.length && (
+              <div ref={sentinelaRef} className="py-8 text-center text-sm text-neutral-500">
+                Carregando mais animais...
               </div>
             )}
           </>
@@ -268,34 +253,21 @@ export default function CatalogoPage() {
 
         <style>{`
           .catalog-grid {
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
             gap: 1rem;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            margin-left: -1rem;
-            margin-right: -1rem;
-            padding: 0.25rem 1rem 0.75rem;
-            scrollbar-width: none;
           }
-          .catalog-grid::-webkit-scrollbar { display: none; }
           .catalog-grid > .catalog-item {
-            flex: 0 0 82%;
-            scroll-snap-align: start;
+            min-width: 0;
           }
           @media (min-width: 640px) {
-            .catalog-grid > .catalog-item { flex-basis: 55%; }
+            .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           }
           @media (min-width: 768px) {
             .catalog-grid {
-              display: grid;
               gap: 1.5rem;
-              overflow: visible;
-              margin: 0;
-              padding: 0;
               grid-template-columns: repeat(${layout.colunas_tablet}, minmax(0, 1fr));
             }
-            .catalog-grid > .catalog-item { flex: initial; }
           }
           @media (min-width: 1024px) {
             .catalog-grid { grid-template-columns: repeat(${layout.colunas_desktop}, minmax(0, 1fr)); }

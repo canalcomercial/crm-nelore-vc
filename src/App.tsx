@@ -63,13 +63,15 @@ const App = () => (
                 <Route path="/tarefas" element={<TarefasPage />} />
                 <Route path="/banco" element={<BancoContatosPage />} />
                 <Route path="/importar" element={<ImportarLeadsPage />} />
-                <Route path="/equipe" element={<EquipePage />} />
-                <Route path="/admin/catalogo" element={<AdminCatalogoPage />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/admin/marketing" element={<Navigate to="/admin?tab=pagina" replace />} />
-                <Route path="/admin/contratos" element={<Navigate to="/admin?tab=contratos" replace />} />
-                <Route path="/admin/meta" element={<Navigate to="/admin?tab=meta" replace />} />
-                <Route path="/admin/pagina-comercial" element={<Navigate to="/admin?tab=pagina" replace />} />
+                <Route element={<ProtectedRoute requireCoordenador />}>
+                  <Route path="/equipe" element={<EquipePage />} />
+                  <Route path="/admin/catalogo" element={<AdminCatalogoPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/admin/marketing" element={<Navigate to="/admin?tab=pagina" replace />} />
+                  <Route path="/admin/contratos" element={<Navigate to="/admin?tab=contratos" replace />} />
+                  <Route path="/admin/meta" element={<Navigate to="/admin?tab=meta" replace />} />
+                  <Route path="/admin/pagina-comercial" element={<Navigate to="/admin?tab=pagina" replace />} />
+                </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -916,7 +916,7 @@ export function useVendasByLead(leadId: string | undefined) {
   });
 }
 
-export function useCriarVenda() {
+export function useCriarVenda({ gerarContratoAutomaticamente = true }: { gerarContratoAutomaticamente?: boolean } = {}) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (venda: Omit<Venda, "id" | "criado_em">) => {
@@ -937,7 +937,7 @@ export function useCriarVenda() {
       qc.invalidateQueries({ queryKey: ["interacoes"] });
       toast.success("Venda registrada");
       // Gera contrato automaticamente em background
-      if (vendaId) {
+      if (vendaId && gerarContratoAutomaticamente) {
         (async () => {
           const tId = toast.loading("Gerando contrato automaticamente...");
           try {

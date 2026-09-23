@@ -25,7 +25,7 @@ export function AnimalCard({
   const compact = layout.estilo_card === "compacto";
   const ampliado = layout.estilo_card === "ampliado";
   return (
-    <article className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-black/5 flex flex-col">
+    <article className="group min-w-0 h-full bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-black/5 flex flex-col">
       <Link to={`/catalogo/${animal.id}`} className={`relative bg-neutral-100 overflow-hidden text-left block ${ampliado ? "aspect-[4/5]" : compact ? "aspect-[5/4]" : "aspect-[4/3]"}`}>
         {animal.foto_url ? (
           <img
@@ -55,7 +55,7 @@ export function AnimalCard({
           </span>
         )}
       </Link>
-      <div className={`${compact ? "p-3 gap-2" : "p-4 gap-3"} flex-1 flex flex-col`}>
+      <div className={`${compact ? "p-3 gap-2" : "p-4 gap-3"} min-w-0 flex-1 flex flex-col`}>
         <div>
           <Link to={`/catalogo/${animal.id}`} className="block hover:opacity-70 transition-opacity">
             <h3 className={`font-display font-semibold text-neutral-900 leading-tight line-clamp-1 ${ampliado ? "text-xl" : compact ? "text-base" : "text-lg"}`}>{animal.nome}</h3>
@@ -81,19 +81,19 @@ export function AnimalCard({
           ) : null}
         </div>
         )}
-        <div className="mt-auto flex gap-2">
+        <div className="mt-auto flex min-w-0 gap-2">
           <Button
             onClick={onInteresse}
-            className="flex-1 bg-[hsl(var(--catalog-primary))] hover:bg-[hsl(var(--catalog-primary))]/90 text-white gap-1.5"
+            className="min-w-0 h-auto min-h-9 flex-1 whitespace-normal text-center leading-tight px-2 py-2 bg-[hsl(var(--catalog-primary))] hover:bg-[hsl(var(--catalog-primary))]/90 text-white gap-1.5"
             size="sm"
           >
-            <MessageCircle className="h-4 w-4" /> {layout.botao_interesse_texto}
+            <MessageCircle className="h-4 w-4 shrink-0" /> {layout.botao_interesse_texto}
           </Button>
           <Button
             onClick={onVerVideo}
             variant="outline"
             size="sm"
-            className="border-[hsl(var(--catalog-primary))]/30 text-[hsl(var(--catalog-primary))]"
+            className="shrink-0 w-9 border-[hsl(var(--catalog-primary))]/30 text-[hsl(var(--catalog-primary))]"
             disabled={!animal.link_video}
             title={layout.botao_video_texto}
           >

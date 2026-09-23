@@ -1,11 +1,11 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/auth-context";
 
 export function ProtectedRoute({
   children,
   requireCoordenador = false,
 }: {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   requireCoordenador?: boolean;
 }) {
   const { user, loading, isCoordenador } = useAuth();
@@ -19,5 +19,5 @@ export function ProtectedRoute({
   }
   if (!user) return <Navigate to="/auth" replace />;
   if (requireCoordenador && !isCoordenador) return <Navigate to="/" replace />;
-  return <>{children}</>;
+  return children ? <>{children}</> : <Outlet />;
 }

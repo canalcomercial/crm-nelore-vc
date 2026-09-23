@@ -41,12 +41,12 @@ export default function FunisPage() {
   const reordenarFunis = useReordenarFunis();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Inicializa filtro: vendedor vê apenas seus leads por padrão; coordenador vê todos
+  // A RLS entrega ao vendedor seus leads e os sem responsável.
   useEffect(() => {
     if (vendedorInicializado || !user) return;
-    setVendedorFiltro(isCoordenador ? "todos" : user.id);
+    setVendedorFiltro("todos");
     setVendedorInicializado(true);
-  }, [user, isCoordenador, vendedorInicializado]);
+  }, [user, vendedorInicializado]);
 
   // Abrir lead via ?lead=<id> (vem de Tarefas / outras páginas)
   useEffect(() => {
@@ -143,7 +143,7 @@ export default function FunisPage() {
         <div className="px-3 sm:px-5 py-3 border-b border-border bg-surface flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-1.5">
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin -mx-1 px-1">
             {loadingFunis && <span className="text-xs text-muted-foreground">Carregando funis...</span>}
-            <DndContext sensors={pillSensors} collisionDetection={closestCenter} onDragEnd={handleReorderFunis}>
+            <DndContext sensors={pillSensors} collisionDetection={closestCenter} onDragEnd={isCoordenador ? handleReorderFunis : undefined}>
               <SortableContext items={funis.map((f) => f.id)} strategy={horizontalListSortingStrategy}>
                 <div className="flex items-center gap-1.5">
                   {funis.map((f) => (
@@ -157,13 +157,15 @@ export default function FunisPage() {
                 </div>
               </SortableContext>
             </DndContext>
-            <button
-              onClick={abrirNovoFunil}
-              className="ml-1 h-7 w-7 shrink-0 rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-primary flex items-center justify-center"
-              title="Novo funil"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
+            {isCoordenador && (
+              <button
+                onClick={abrirNovoFunil}
+                className="ml-1 h-7 w-7 shrink-0 rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-primary flex items-center justify-center"
+                title="Novo funil"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
           <div className="lg:ml-auto grid grid-cols-2 sm:flex items-center gap-2 w-full lg:w-auto">
             <div className="relative col-span-2 sm:col-span-1 w-full sm:w-auto">
@@ -241,7 +243,7 @@ export default function FunisPage() {
               </Select>
             </div>
             <div className="col-span-1 w-full sm:w-auto flex justify-end">
-              {activeFunil && (
+              {activeFunil && isCoordenador && (
                 <button
                   onClick={abrirEditarFunil}
                   className="h-8 px-3 rounded-md text-xs border border-border bg-surface text-muted-foreground hover:text-foreground hover:bg-secondary flex items-center justify-center gap-1.5 w-full sm:w-auto"
