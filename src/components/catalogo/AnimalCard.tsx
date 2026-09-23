@@ -38,13 +38,13 @@ export function AnimalCard({
           <div className="h-full w-full flex items-center justify-center text-neutral-400 text-xs">Sem foto</div>
         )}
         {animal.lote && layout.mostrar_lote_badge && (
-          <span className="absolute top-3 left-3 bg-[hsl(var(--catalog-primary))] text-white text-xs font-bold px-2.5 py-1 rounded tracking-wider">
+          <span className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-[hsl(var(--catalog-primary))] text-white text-[9px] sm:text-xs font-bold px-1.5 sm:px-2.5 py-1 rounded tracking-wider">
             LOTE {animal.lote}
           </span>
         )}
         {animal.destaque && (
-          <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1">
-            <Star className="h-3 w-3 fill-white" /> DESTAQUE
+          <span className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-amber-500 text-white text-[8px] sm:text-[10px] font-bold px-1 sm:px-2 py-1 rounded flex items-center gap-0.5 sm:gap-1">
+            <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 fill-white" /> DESTAQUE
           </span>
         )}
         {animal.link_video && (
@@ -55,15 +55,15 @@ export function AnimalCard({
           </span>
         )}
       </Link>
-      <div className={`${compact ? "p-3 gap-2" : "p-4 gap-3"} min-w-0 flex-1 flex flex-col`}>
+      <div className={`${compact ? "p-2.5 gap-2 sm:p-3" : "p-2.5 gap-2 sm:p-4 sm:gap-3"} min-w-0 flex-1 flex flex-col`}>
         <div>
           <Link to={`/catalogo/${animal.id}`} className="block hover:opacity-70 transition-opacity">
-            <h3 className={`font-display font-semibold text-neutral-900 leading-tight line-clamp-1 ${ampliado ? "text-xl" : compact ? "text-base" : "text-lg"}`}>{animal.nome}</h3>
+            <h3 className={`font-display font-semibold text-neutral-900 leading-tight line-clamp-1 ${ampliado ? "text-base sm:text-xl" : compact ? "text-sm sm:text-base" : "text-base sm:text-lg"}`}>{animal.nome}</h3>
           </Link>
           {layout.mostrar_categoria && animal.categoria && <p className="text-xs text-neutral-500 mt-0.5">{animal.categoria}{animal.raca ? ` · ${animal.raca}` : ""}</p>}
         </div>
         {layout.mostrar_indices && (
-          <div className="grid grid-cols-3 gap-2 text-center border-y border-neutral-100 py-2">
+          <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center border-y border-neutral-100 py-2">
             <Stat label="IABCZ" value={animal.iabcz} />
             <Stat label="MGTE" value={animal.mgte} />
             <Stat label="IQG" value={animal.iqg} />
@@ -84,16 +84,16 @@ export function AnimalCard({
         <div className="mt-auto flex min-w-0 gap-2">
           <Button
             onClick={onInteresse}
-            className="min-w-0 h-auto min-h-9 flex-1 whitespace-normal text-center leading-tight px-2 py-2 bg-[hsl(var(--catalog-primary))] hover:bg-[hsl(var(--catalog-primary))]/90 text-white gap-1.5"
+            className="min-w-0 h-auto min-h-9 flex-1 whitespace-normal text-center leading-tight text-[11px] sm:text-sm px-1 py-2 sm:px-2 bg-[hsl(var(--catalog-primary))] hover:bg-[hsl(var(--catalog-primary))]/90 text-white gap-1 sm:gap-1.5"
             size="sm"
           >
-            <MessageCircle className="h-4 w-4 shrink-0" /> {layout.botao_interesse_texto}
+            <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> {layout.botao_interesse_texto}
           </Button>
           <Button
             onClick={onVerVideo}
             variant="outline"
             size="sm"
-            className="shrink-0 w-9 border-[hsl(var(--catalog-primary))]/30 text-[hsl(var(--catalog-primary))]"
+            className="shrink-0 w-8 sm:w-9 border-[hsl(var(--catalog-primary))]/30 text-[hsl(var(--catalog-primary))]"
             disabled={!animal.link_video}
             title={layout.botao_video_texto}
           >
@@ -108,8 +108,8 @@ export function AnimalCard({
 function Stat({ label, value }: { label: string; value: number | null }) {
   return (
     <div>
-      <div className="text-[10px] text-neutral-500 uppercase tracking-wider">{label}</div>
-      <div className="text-sm font-semibold text-neutral-800">{value != null ? value : "-"}</div>
+      <div className="text-[9px] sm:text-[10px] text-neutral-500 uppercase tracking-normal sm:tracking-wider">{label}</div>
+      <div className="text-[11px] sm:text-sm font-semibold tabular-nums text-neutral-800">{value != null ? value : "-"}</div>
     </div>
   );
 }
