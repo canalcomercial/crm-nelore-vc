@@ -22,7 +22,7 @@ const items = [
 export function Sidebar() {
   const { pathname } = useLocation();
   const { data: vencidas = [] } = useFollowUpsVencidos();
-  const { signOut, profile } = useAuth();
+  const { signOut, profile, isCoordenador } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Fecha o menu mobile ao navegar
@@ -39,7 +39,7 @@ export function Sidebar() {
         <img src={logoNelore} alt="CRM Nelore VC" className="h-full w-full object-cover" decoding="async" />
       </div>
       
-      {items.map((it) => {
+      {items.filter((it) => isCoordenador || !["/equipe", "/admin/catalogo", "/admin"].includes(it.to)).map((it) => {
         const active =
           it.to === "/"
             ? pathname === "/"

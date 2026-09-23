@@ -16,6 +16,7 @@ import { ptBR } from "date-fns/locale";
 import { useCriarVenda, useTodosLeads, useUsuarios, useUpdateVenda } from "@/hooks/useCrm";
 import { CATEGORIAS_VENDA, FORMAS_PAGAMENTO, TIPOS_PARCELAMENTO, type Venda } from "@/types/crm";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/auth-context";
 
 interface Props {
   trigger?: ReactNode;
@@ -36,6 +37,7 @@ export function VendaDialog({ trigger, open: openProp, onOpenChange, leadId, cli
 
   const { data: leads = [] } = useTodosLeads();
   const { data: usuarios = [] } = useUsuarios();
+  const { user, isCoordenador } = useAuth();
   const criar = useCriarVenda();
   const atualizar = useUpdateVenda();
 
@@ -71,7 +73,7 @@ export function VendaDialog({ trigger, open: openProp, onOpenChange, leadId, cli
       valor_total: "",
       leilao_evento: "",
       fazenda_fornecedor: "",
-      vendedor_id: "",
+      vendedor_id: user?.id ?? "",
       vendedor_externo: "",
       tipo_vendedor: "interno" as TipoVendedor,
       forma_pagamento: "À vista",
@@ -114,7 +116,7 @@ export function VendaDialog({ trigger, open: openProp, onOpenChange, leadId, cli
       valor_total: Number(form.valor_total),
       leilao_evento: form.leilao_evento || null,
       fazenda_fornecedor: form.fazenda_fornecedor || null,
-      vendedor_id: isInterno ? (form.vendedor_id || null) : null,
+      vendedor_id: isCoordenador ? (isInterno ? (form.vendedor_id || null) : null) : user?.id ?? null,
       vendedor_externo: !isInterno ? (form.vendedor_externo || null) : null,
       tipo_vendedor: form.tipo_vendedor,
       forma_pagamento: form.forma_pagamento || null,
@@ -261,7 +263,7 @@ export function VendaDialog({ trigger, open: openProp, onOpenChange, leadId, cli
               <Select value={form.vendedor_id} onValueChange={(v) => setForm({ ...form, vendedor_id: v })}>
                 <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Selecionar..." /></SelectTrigger>
                 <SelectContent>
-                  {usuarios.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                  {usuarios.filter((u) => isCoordenador || u.id === user?.id).map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>

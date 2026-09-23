@@ -16,6 +16,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCriarVenda, useVendasByLead } from "@/hooks/useCrm";
+import { useAuth } from "@/hooks/auth-context";
 import { CATEGORIAS_VENDA, FORMAS_PAGAMENTO, TIPOS_PARCELAMENTO, type Lead, type Venda } from "@/types/crm";
 import { ContratoDialog } from "./ContratoDialog";
 import {
@@ -40,7 +41,8 @@ export function EmitirContratoDialog({ trigger, open: openProp, onOpenChange, le
   const open = openProp ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
 
-  const criar = useCriarVenda();
+  const { user } = useAuth();
+  const criar = useCriarVenda({ gerarContratoAutomaticamente: false });
   const { data: vendasAnteriores } = useVendasByLead(lead.id);
   const ultimaVenda = vendasAnteriores?.[0];
   const [vendaCriada, setVendaCriada] = useState<Venda | null>(null);
@@ -116,7 +118,7 @@ export function EmitirContratoDialog({ trigger, open: openProp, onOpenChange, le
       valor_total: Number(form.valor_total),
       leilao_evento: null,
       fazenda_fornecedor: null,
-      vendedor_id: lead.responsavel_id ?? null,
+      vendedor_id: lead.responsavel_id ?? user?.id ?? null,
       vendedor_externo: null,
       tipo_vendedor: "interno",
       forma_pagamento: form.forma_pagamento || null,
