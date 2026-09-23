@@ -20,13 +20,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const loadSession = async (sess: Session | null) => {
       const uid = sess?.user.id ?? null;
       const current = ++request.current;
-      if (identity.current !== uid) {
+      const identityChanged = identity.current !== uid;
+      if (identityChanged) {
         identity.current = uid;
         queryClient.clear();
         setProfile(null);
         setRoles([]);
+        setLoading(!!uid);
+      } else if (!uid) {
+        setLoading(false);
       }
-      setLoading(!!uid);
       setSession(sess);
       setUser(sess?.user ?? null);
       if (!uid) return;
@@ -35,8 +38,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.from("user_roles").select("role").eq("user_id", uid),
       ]);
       if (current !== request.current) return;
-      setProfile(profileError ? null : ((prof as Profile | null) ?? null));
-      setRoles(rolesError ? [] : (rs ?? []).map((r) => r.role as AppRole));
+      // Uma renovação da mesma sessão não deve desmontar a tela nem apagar
+      // a permissão do coordenador por uma falha transitória de rede.
+      if (!profileError) setProfile((prof as Profile | null) ?? null);
+      if (!rolesError) setRoles((rs ?? []).map((r) => r.role as AppRole));
       setLoading(false);
     };
 
